@@ -52,8 +52,8 @@ const MainNavbar = () => {
     <nav className="bg-primary-600 text-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          <Link to="/" className="font-bold text-2xl">
-            OJ Platform
+          <Link to="/" className="font-press font-bold text-2xl">
+            OGCode
           </Link>
           
           {/* Mobile menu button */}
@@ -159,13 +159,16 @@ const MainNavbar = () => {
                 </div>
               ) : (
                 <div className="flex flex-col space-y-3">
+                  <div>
                   <Link 
                     to="/login" 
-                    className="text-white hover:text-gray-200"
+                    className="text-white hover:font-gray-600"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Login
                   </Link>
+                  </div>
+                  
                   <Link 
                     to="/register"
                     onClick={() => setIsMenuOpen(false)}

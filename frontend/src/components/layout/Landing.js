@@ -17,7 +17,7 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row justify-center md:justify-start space-y-3 sm:space-y-0 sm:space-x-4">
                 <Link 
                   to="/register"
-                  className="btn-primary px-8 py-3 text-lg font-semibold rounded-md inline-block text-center"
+                  className="font-press btn-primary px-8 py-3 text-lg font-semibold rounded-md inline-block text-center"
                 >
                   Get Started
                 </Link>
@@ -30,13 +30,15 @@ const Landing = () => {
               </div>
             </div>
             <div className="md:w-1/2">
-              <div className="bg-white bg-opacity-10 rounded-lg p-6 backdrop-filter backdrop-blur-sm">
-                <img 
-                  src="./image2.png"
+            <div className="flex justify-center items-center h-full"> 
+            <img 
+                  src="./image3.png"
                   alt="Coding Illustration" 
-                  className="h-32 rounded-md"
+                  className="color-white h-40 rounded-md"
                 />
-              </div>
+
+            </div>
+                
             </div>
           </div>
         </div>

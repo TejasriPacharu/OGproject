@@ -10,6 +10,21 @@ body {
   background-color: #f8f9fa;
 }
 
+.source-code-pro {
+  font-family: "Source Code Pro", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.press-start-2p-regular {
+  font-family: "Press Start 2P", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+
 /* Custom utilities that extend Tailwind */
 @layer components {
   .btn {
@@ -106,3 +121,5 @@ body {
     transform: rotate(360deg);
   }
 }
+
+

@@ -17,7 +17,8 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif']
+        code: ['"Source Code Pro"', 'monospace'],
+        press: ['"Press Start 2P"', 'system-ui'],
       }
     },
   },
