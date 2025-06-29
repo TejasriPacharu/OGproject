@@ -1,3 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+body {
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+}
+
+/* Custom utilities that extend Tailwind */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded font-medium transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+  }
+
+  .btn-outline-primary {
+    @apply border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white;
+  }
+
+  .hover-card {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .hero-section {
+    @apply relative bg-gradient-to-r from-primary-600 to-primary-800 py-16;
+  }
+}
+
+/* Landing Page Styles - REMOVED CIRCULAR DEPENDENCY */
+/* The .hero-section class is already defined in @layer components above */
+
+/* Form Styling */
+.form-control:focus {
+  @apply border-blue-500 ring-blue-500;
+}
+
+/* Navbar Styling */
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+/* Card Styling */
+.card {
+  @apply rounded-lg border-none shadow-md;
+}
+
+.card-header {
+  @apply rounded-t-lg;
+}
+
+/* Media query utilities */
+@media (max-width: 767px) {
+  .hero-section {
+    @apply py-8;
+  }
+  
+  .landing-page .hero-section h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Legacy styles */
 .App {
   text-align: center;
 }
