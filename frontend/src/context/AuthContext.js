@@ -22,11 +22,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Register user
-  const register = async (formData) => {
+  const register = async (name, email, password) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post('/api/auth/register', formData);
+      //const res = await axios.post('/api/auth/register', formData);
+      const res = await axios.post('/api/auth/register', { name, email, password });
       setToken(res.data.token);
       setAuthToken(res.data.token);
       setUser(res.data.user);
@@ -41,11 +42,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login user
-  const login = async (formData) => {
+  const login = async (email, password) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post('/api/auth/login', formData);
+      const res = await axios.post('/api/auth/login',{email, password});
       setToken(res.data.token);
       setAuthToken(res.data.token);
       setUser(res.data.user);
