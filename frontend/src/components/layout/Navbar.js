@@ -36,7 +36,7 @@ const MainNavbar = () => {
   );
 
   const guestLinks = (
-    <div className="flex items-center space-x-4">
+    <div className="font-code font-bold flex items-center space-x-4">
       <Link to="/login" className="text-white hover:text-gray-200">
         Login
       </Link>
@@ -56,7 +56,6 @@ const MainNavbar = () => {
             OGCode
           </Link>
           
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
@@ -86,10 +85,10 @@ const MainNavbar = () => {
           {/* Desktop navigation */}
           <div className="hidden md:flex items-center justify-between flex-1 pl-10">
             <div className="flex space-x-4">
-              <Link to="/" className="text-white hover:text-gray-200">Home</Link>
-              <Link to="/problems" className="text-white hover:text-gray-200">Problems</Link>
-              <Link to="/contests" className="text-white hover:text-gray-200">Contests</Link>
-              <Link to="/leaderboard" className="text-white hover:text-gray-200">Leaderboard</Link>
+              <Link to="/" className="font-code font-bold text-white hover:text-gray-200">Home</Link>
+              <Link to="/problems" className="font-code font-bold text-white hover:text-gray-200">Problems</Link>
+              <Link to="/contests" className="font-code font-bold text-white hover:text-gray-200">Contests</Link>
+              <Link to="/leaderboard" className="font-code font-bold text-white hover:text-gray-200">Leaderboard</Link>
             </div>
             
             <div className="flex items-center">

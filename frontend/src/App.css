@@ -24,7 +24,6 @@ body {
 }
 
 
-
 /* Custom utilities that extend Tailwind */
 @layer components {
   .btn {
@@ -48,10 +47,6 @@ body {
   }
 }
 
-/* Landing Page Styles - REMOVED CIRCULAR DEPENDENCY */
-/* The .hero-section class is already defined in @layer components above */
-
-/* Form Styling */
 .form-control:focus {
   @apply border-blue-500 ring-blue-500;
 }

@@ -67,6 +67,10 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  // Clear error messages
+const clearErrors = () => setError(null);
+
+
   // Load user
   const loadUser = async () => {
     if (token) {
@@ -99,7 +103,8 @@ export const AuthProvider = ({ children }) => {
     }
     // eslint-disable-next-line
   }, []);
-
+ 
+  
   return (
     <AuthContext.Provider
       value={{
@@ -111,7 +116,8 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
-        loadUser
+        loadUser,
+        clearErrors,
       }}
     >
       {children}
