@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      //const res = await axios.post('/api/auth/register', formData);
       const res = await axios.post("/api/auth/register", {
         name,
         email,

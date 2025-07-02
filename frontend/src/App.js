@@ -11,6 +11,8 @@ import Landing from './components/layout/Landing';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/dashboard/Dashboard';
+import ProblemPage from './components/dashboard/ProblemPage';
+import ProblemsList from './components/dashboard/ProblemsList';
 import PrivateRoute from './components/routing/PrivateRoute';
 
 const App = () => {
@@ -28,6 +30,8 @@ const App = () => {
                 path="/dashboard" 
                 element={<PrivateRoute><Dashboard /></PrivateRoute>} 
               />
+              <Route path="/problems" element={<PrivateRoute><ProblemsList /></PrivateRoute>} />
+              <Route path="/problems/:id" element={<PrivateRoute><ProblemPage /></PrivateRoute>} /> 
             </Routes>
           </main>
         </div>

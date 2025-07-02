@@ -1,21 +1,46 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { FaUser, FaCode, FaCalendarAlt, FaChartLine } from 'react-icons/fa';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [problems, setProblems] = useState([]);
+  const [userStats, setUserStats] = useState({
+    problemsSolved: 0,
+    contestRating: 0,
+    globalRank: 0,
+    streak: 0
+  });
+
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        const response = await axios.get('/api/problems');
+        if (Array.isArray(response.data)) {
+          setProblems(response.data);
+        } else if (response.data && Array.isArray(response.data.problems)) {
+          setProblems(response.data.problems);
+        } else {
+          console.error('Problems data is not an array:', response.data);
+          setProblems([]);
+        }
+      } catch (error) {
+        console.error('Error fetching problems:', error);
+        setProblems([]);
+      }
+    };
+
+    fetchProblems();
+  }, []);
 
   // Sample data - in a real app, this would come from API calls
   const recentActivity = [
     { id: 1, type: 'submission', problem: 'Two Sum', result: 'Accepted', date: '2023-07-15' },
     { id: 2, type: 'contest', name: 'Weekly Contest 305', rank: '156', date: '2023-07-10' },
     { id: 3, type: 'submission', problem: 'Valid Parentheses', result: 'Wrong Answer', date: '2023-07-08' }
-  ];
-
-  const recommendedProblems = [
-    { id: 101, title: 'Merge Two Sorted Lists', difficulty: 'Easy', tags: ['Linked List', 'Recursion'] },
-    { id: 102, title: 'Best Time to Buy and Sell Stock', difficulty: 'Easy', tags: ['Array', 'Dynamic Programming'] },
-    { id: 103, title: 'Unique Paths', difficulty: 'Medium', tags: ['Math', 'Dynamic Programming', 'Combinatorics'] }
   ];
 
   const upcomingContests = [
@@ -56,19 +81,19 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               <div>
                 <p className="text-sm opacity-75">Problems Solved</p>
-                <p className="text-xl font-bold">23</p>
+                <p className="text-xl font-bold">{userStats.problemsSolved}</p>
               </div>
               <div>
                 <p className="text-sm opacity-75">Contest Rating</p>
-                <p className="text-xl font-bold">1243</p>
+                <p className="text-xl font-bold">{userStats.contestRating}</p>
               </div>
               <div>
                 <p className="text-sm opacity-75">Global Rank</p>
-                <p className="text-xl font-bold">9,654</p>
+                <p className="text-xl font-bold">{userStats.globalRank}</p>
               </div>
               <div>
                 <p className="text-sm opacity-75">Streak</p>
-                <p className="text-xl font-bold">5 days</p>
+                <p className="text-xl font-bold">{userStats.streak} days</p>
               </div>
             </div>
           </div>
@@ -82,48 +107,57 @@ const Dashboard = () => {
               <h2 className="text-lg font-bold">Recent Activity</h2>
             </div>
             <div className="space-y-3">
-              {recentActivity.map(activity => (
-                <div key={activity.id} className="border-b pb-2 last:border-0">
-                  <div className="flex justify-between">
-                    <div>
-                      {activity.type === 'submission' ? (
-                        <>
-                          <p className="font-medium">{activity.problem}</p>
-                          <p className={`text-sm ${activity.result === 'Accepted' ? 'text-green-500' : 'text-red-500'}`}>
-                            {activity.result}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-medium">{activity.name}</p>
-                          <p className="text-sm text-gray-600">Rank: {activity.rank}</p>
-                        </>
-                      )}
+              {recentActivity.length > 0 ? (
+                recentActivity.map(activity => (
+                  <div key={activity.id} className="border-b pb-2 last:border-0">
+                    <div className="flex justify-between">
+                      <div>
+                        {activity.type === 'submission' ? (
+                          <>
+                            <p className="font-medium">{activity.problem}</p>
+                            <p className={`text-sm ${activity.result === 'Accepted' ? 'text-green-500' : 'text-red-500'}`}>
+                              {activity.result}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-medium">{activity.name}</p>
+                            <p className="text-sm">Rank: {activity.rank}</p>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">{activity.date}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{activity.date}</p>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-gray-500">No recent activity</p>
+              )}
             </div>
           </div>
 
-          {/* Recommended Problems */}
+          {/* Available Problems */}
           <div className="bg-white rounded-lg shadow-sm p-5">
-            <div className="flex items-center mb-4">
-              <FaCode className="text-primary-500 mr-2" />
-              <h2 className="text-lg font-bold">Recommended Problems</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <FaCode className="text-primary-500 mr-2" />
+                <h2 className="text-lg font-bold">Problems</h2>
+              </div>
+              <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
             </div>
             <div className="space-y-3">
-              {recommendedProblems.map(problem => (
-                <div key={problem.id} className="border-b pb-2 last:border-0">
-                  <p className="font-medium mb-1">{problem.title}</p>
-                  <div className="flex justify-between items-center">
-                    <span className={`text-sm ${getDifficultyColor(problem.difficulty)}`}>
-                      {problem.difficulty}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {problem.tags.map((tag, idx) => (
-                        <span key={idx} className="text-xs bg-gray-100 text-gray-700 rounded px-2 py-1">
+              {problems.slice(0, 5).map(problem => (
+                <div key={problem._id} className="border-b pb-2 last:border-0">
+                  <div className="flex justify-between">
+                    <div>
+                      <Link to={`/problems/${problem._id}`} className="font-medium hover:text-primary-600">
+                        {problem.title}
+                      </Link>
+                      <p className={`text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>
+                    </div>
+                    <div className="text-xs text-gray-500 flex flex-wrap gap-1">
+                      {problem.tags.slice(0, 2).map((tag, index) => (
+                        <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
                           {tag}
                         </span>
                       ))}
@@ -131,6 +165,9 @@ const Dashboard = () => {
                   </div>
                 </div>
               ))}
+              {problems.length === 0 && (
+                <p className="text-gray-500">No problems available</p>
+              )}
             </div>
           </div>
 
@@ -140,14 +177,14 @@ const Dashboard = () => {
               <FaCalendarAlt className="text-primary-500 mr-2" />
               <h2 className="text-lg font-bold">Upcoming Contests</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {upcomingContests.map(contest => (
-                <div key={contest.id} className="border-b pb-3 last:border-0">
+                <div key={contest.id} className="border-b pb-2 last:border-0">
                   <p className="font-medium">{contest.title}</p>
-                  <p className="text-sm text-gray-700">
-                    <span className="block mb-1">{contest.date}</span>
-                    <span className="text-gray-500">{contest.duration}</span>
-                  </p>
+                  <div className="flex justify-between">
+                    <p className="text-sm text-gray-600">{contest.date}</p>
+                    <p className="text-sm text-gray-600">{contest.duration}</p>
+                  </div>
                 </div>
               ))}
             </div>

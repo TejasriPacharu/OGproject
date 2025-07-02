@@ -1,37 +1,71 @@
+const fs = require('fs');
+const path = require('path');
 const Problem = require("../models/Problem");
 const User = require("../models/User");
 
+// Helper function to read problems from JSON file
+const getProblemsFromFile = () => {
+  try {
+    const problemsFilePath = path.join(__dirname, '../data/problems.json');
+    const problemsData = fs.readFileSync(problemsFilePath, 'utf8');
+    return JSON.parse(problemsData);
+  } catch (error) {
+    console.error('Error reading problems file:', error);
+    return [];
+  }
+};
 
-// retriveing all the problems -> GET
-// get problem by ID  -> GET
-// create a problem  -> POST
-// edit a problem   -> PUT
-// delete the problem  -> DELETE 
+// Helper function to write problems to JSON file
+const writeProblemsToFile = (problems) => {
+  try {
+    const problemsFilePath = path.join(__dirname, '../data/problems.json');
+    const problemsData = JSON.stringify(problems, null, 2);
+    fs.writeFileSync(problemsFilePath, problemsData);
+  } catch (error) {
+    console.error('Error writing problems file:', error);
+  }
+};
 
+// retrieving all the problems -> GET
 const getAllProblems = async (req, res) => {
     try{
-        const problems = await Problem.find({});
+        // Use file-based problems instead of MongoDB
+        const problems = getProblemsFromFile();
         return res.status(200).json({problems});
     }catch(error){
-        return res.status(500).json({message:error.message});
+        console.error('Error getting all problems:', error);
+        return res.status(500).json({message: error.message});
     }
 }
 
-const getProblemByID = async ( req, res) => {
+const getProblemByID = async (req, res) => {
     try {
-       const problem = await Problem.findById(req.params.id);
-       return res.status(200).json({problem});
+       // Use file-based problems instead of MongoDB
+       const problems = getProblemsFromFile();
+       const problem = problems.find(p => p.id === req.params.id);
+       
+       if (!problem) {
+         return res.status(404).json({message: 'Problem not found'});
+       }
+       
+       return res.status(200).json(problem);
     }catch(error){
-        return res.status(500).json({message:error.message});
+        console.error('Error getting problem by ID:', error);
+        return res.status(500).json({message: error.message});
     }
 }
 
 const createProblem = async (req, res) => {
     try {
-        const problem = await Problem.create(req.body);
-        return res.status(201).json({problem});
+        // Use file-based problems instead of MongoDB
+        const problems = getProblemsFromFile();
+        const newProblem = req.body;
+        problems.push(newProblem);
+        writeProblemsToFile(problems);
+        return res.status(201).json({problem: newProblem});
     }catch(error){
-        return res.status(500).json({message:error.message});
+        console.error('Error creating problem:', error);
+        return res.status(500).json({message: error.message});
     }
 }
 
@@ -42,44 +76,24 @@ const editProblem = async (req, res) => {
         return res.status(400).json({message: "Problem ID is required"});
     }
 
-    const updateData = {};
-    updateData.createdBy = req.user._id;
-
     try {
-       let existingProblem = await Problem.findById(id);
-
-       if(!existingProblem){
-         return res.status(404).json({message: "Problem not found"})
+       // Use file-based problems instead of MongoDB
+       const problems = getProblemsFromFile();
+       const problemIndex = problems.findIndex(p => p.id === id);
+       
+       if (problemIndex === -1) {
+         return res.status(404).json({message: 'Problem not found'});
        }
-
-       if(testcases) updateData.testCases = testcases;
-       if(slug) updateData.slug = slug;
-       if(title) updateData.title = title;
-       if(description) updateData.description = description;
-       if(difficulty) updateData.difficulty = difficulty;
-       if(tags) updateData.tags = tags;
-       if(solvedBy) updateData.solvedBy = solvedBy;
-       if(input) updateData.input = input;
-       if(codeStubs) updateData.codeStubs = codeStubs;
-       if(output) updateData.output = output;
-       if(constraints) updateData.constraints = constraints;
-       if(timelimit) updateData.timelimit = timelimit;
-
-       existingProblem = await Problem.findByIdAndUpdate(id, updateData, {
-        new: true,
-      });
-  
-      return res
-        .status(200)
-        .json({ problem: existingProblem, message: "Problem updated!" });
-    } catch (error) {
-      console.error("Error editing problem:", error);
-      return res
-        .status(404)
-        .json({ message: "Failed to update problem" });
+       
+       const updateData = req.body;
+       problems[problemIndex] = { ...problems[problemIndex], ...updateData };
+       writeProblemsToFile(problems);
+       return res.status(200).json({problem: problems[problemIndex]});
+    }catch(error){
+        console.error('Error editing problem:', error);
+        return res.status(500).json({message: error.message});
     }
 }
-
 
 const deleteProblem = async (req, res) => {
     // delete based on id
@@ -90,15 +104,22 @@ const deleteProblem = async (req, res) => {
     }
   
     try {
-      await Problem.findByIdAndDelete(id);
-  
-      return res.status(StatusCodes.OK).json({ message: "Problem deleted!" });
+       // Use file-based problems instead of MongoDB
+       const problems = getProblemsFromFile();
+       const problemIndex = problems.findIndex(p => p.id === id);
+       
+       if (problemIndex === -1) {
+         return res.status(404).json({message: 'Problem not found'});
+       }
+       
+       problems.splice(problemIndex, 1);
+       writeProblemsToFile(problems);
+       return res.status(200).json({message: "Problem deleted!"});
     } catch (error) {
       console.log(error);
       return res.status(500).json(error);
     }
 };
-
 
 module.exports = {
     getAllProblems,
@@ -107,4 +128,3 @@ module.exports = {
     editProblem,
     deleteProblem
 }
-
