@@ -1,41 +1,30 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
 
 // Import routes
-const authRoutes = require("./routes/auth");
-
+const authRoutes = require('./routes/auth');
+const problemRoutes = require('./routes/problem');
 // Create Express app
 const app = express();
-
-// Middleware
-// In server.js
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
-);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Routes
-app.use("/api/auth", authRoutes);
+app.use(cors());
+app.use('/api/auth', authRoutes);
+app.use('/api/problems', problemRoutes);
 
 // Default route
-app.get("/", (req, res) => {
-  res.send("API is running...");
+app.get('/', (req, res) => {
+  res.send('API is running...');
 });
 
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(
-      process.env.MONGO_URI || "mongodb://localhost:27017/ojproject",
-    );
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ojproject');
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
