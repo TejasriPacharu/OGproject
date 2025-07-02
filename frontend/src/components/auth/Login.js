@@ -1,15 +1,16 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import { FaUser, FaLock, FaExclamationTriangle } from 'react-icons/fa';
+import React, { useState, useContext, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import { FaUser, FaLock, FaExclamationTriangle } from "react-icons/fa";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, error, clearErrors, isAuthenticated } = useContext(AuthContext);
+  const { login, error, clearErrors, isAuthenticated } =
+    useContext(AuthContext);
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,21 +20,21 @@ const Login = () => {
   useEffect(() => {
     // If already authenticated, redirect to dashboard
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
 
     // Clear any previous errors when component mounts
     clearErrors();
   }, [isAuthenticated, navigate, clearErrors]);
 
-  const onChange = e => {
+  const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    
+
     // Clear specific field error when user starts typing
     if (formErrors[e.target.name]) {
       setFormErrors({
         ...formErrors,
-        [e.target.name]: ''
+        [e.target.name]: "",
       });
     }
   };
@@ -43,15 +44,15 @@ const Login = () => {
     let isValid = true;
 
     if (!email) {
-      errors.email = 'Email is required';
+      errors.email = "Email is required";
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errors.email = 'Email address is invalid';
+      errors.email = "Email address is invalid";
       isValid = false;
     }
 
     if (!password) {
-      errors.password = 'Password is required';
+      errors.password = "Password is required";
       isValid = false;
     }
 
@@ -59,9 +60,9 @@ const Login = () => {
     return isValid;
   };
 
-  const onSubmit = async e => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       setIsSubmitting(true);
       await login(email, password);
@@ -78,7 +79,7 @@ const Login = () => {
             Sign in to your account to access your dashboard
           </p>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center mb-4">
             <FaExclamationTriangle className="mr-2" />
@@ -88,7 +89,10 @@ const Login = () => {
 
         <form className="space-y-6" onSubmit={onSubmit}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email Address
             </label>
             <div className="relative">
@@ -101,7 +105,7 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={onChange}
-                className={`block w-full pl-10 pr-3 py-2 border ${formErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
+                className={`block w-full pl-10 pr-3 py-2 border ${formErrors.email ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 placeholder="Email address"
               />
             </div>
@@ -111,7 +115,10 @@ const Login = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <div className="relative">
@@ -124,7 +131,7 @@ const Login = () => {
                 type="password"
                 value={password}
                 onChange={onChange}
-                className={`block w-full pl-10 pr-3 py-2 border ${formErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
+                className={`block w-full pl-10 pr-3 py-2 border ${formErrors.password ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 placeholder="Password"
               />
             </div>
@@ -139,15 +146,18 @@ const Login = () => {
               disabled={isSubmitting}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Logging in...' : 'Sign in'}
+              {isSubmitting ? "Logging in..." : "Sign in"}
             </button>
           </div>
         </form>
 
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="font-medium text-primary-600 hover:text-primary-500"
+            >
               Register
             </Link>
           </p>

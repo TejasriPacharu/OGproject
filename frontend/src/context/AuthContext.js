@@ -1,11 +1,11 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,11 +13,11 @@ export const AuthProvider = ({ children }) => {
   // Set auth token in axios headers
   const setAuthToken = (token) => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      localStorage.setItem('token', token);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      localStorage.setItem("token", token);
     } else {
-      delete axios.defaults.headers.common['Authorization'];
-      localStorage.removeItem('token');
+      delete axios.defaults.headers.common["Authorization"];
+      localStorage.removeItem("token");
     }
   };
 
@@ -27,7 +27,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       //const res = await axios.post('/api/auth/register', formData);
-      const res = await axios.post('/api/auth/register', { name, email, password });
+      const res = await axios.post("/api/auth/register", {
+        name,
+        email,
+        password,
+      });
       setToken(res.data.token);
       setAuthToken(res.data.token);
       setUser(res.data.user);
@@ -35,7 +39,9 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return res.data;
     } catch (err) {
-      setError(err.response?.data.message || 'An error occurred during registration');
+      setError(
+        err.response?.data.message || "An error occurred during registration",
+      );
       setLoading(false);
       throw err;
     }
@@ -46,7 +52,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post('/api/auth/login',{email, password});
+      const res = await axios.post("/api/auth/login", {
+        email,
+        password,
+      });
       setToken(res.data.token);
       setAuthToken(res.data.token);
       setUser(res.data.user);
@@ -54,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return res.data;
     } catch (err) {
-      setError(err.response?.data.message || 'Invalid credentials');
+      setError(err.response?.data.message || "Invalid credentials");
       setLoading(false);
       throw err;
     }
@@ -69,8 +78,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Clear error messages
-const clearErrors = () => setError(null);
-
+  const clearErrors = () => setError(null);
 
   // Load user
   const loadUser = async () => {
@@ -78,7 +86,7 @@ const clearErrors = () => setError(null);
       setAuthToken(token);
       try {
         setLoading(true);
-        const res = await axios.get('/api/auth/me');
+        const res = await axios.get("/api/auth/me");
         setUser(res.data.user);
         setIsAuthenticated(true);
         setLoading(false);
@@ -104,8 +112,7 @@ const clearErrors = () => setError(null);
     }
     // eslint-disable-next-line
   }, []);
- 
-  
+
   return (
     <AuthContext.Provider
       value={{
