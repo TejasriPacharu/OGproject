@@ -26,12 +26,9 @@ const App = () => {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route 
-                path="/dashboard" 
-                element={<PrivateRoute><Dashboard /></PrivateRoute>} 
-              />
+              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/problems" element={<PrivateRoute><ProblemsList /></PrivateRoute>} />
-              <Route path="/problems/:id" element={<PrivateRoute><ProblemPage /></PrivateRoute>} /> 
+              <Route path="/problems/:id" element={<PrivateRoute><ProblemPage /></PrivateRoute>} />
             </Routes>
           </main>
         </div>

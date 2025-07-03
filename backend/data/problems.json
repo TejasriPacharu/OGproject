@@ -5,7 +5,10 @@
     "title": "Two Sum",
     "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
     "difficulty": "Easy",
-    "tags": ["Arrays", "Hash Table"],
+    "tags": [
+      "Arrays",
+      "Hash Table"
+    ],
     "solvedBy": [],
     "input": "An array of integers nums and an integer target.",
     "codeStubs": [
@@ -25,7 +28,7 @@
       }
     ],
     "constraints": "2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.",
-    "timelimit": 1.0,
+    "timelimit": 1,
     "createdBy": "admin",
     "testCases": [
       {
@@ -47,5 +50,61 @@
         "explanation": "Because nums[0] + nums[1] == 6, we return [0, 1]."
       }
     ]
+  },
+  {
+    "slug": "two-sum",
+    "id": "prob001",
+    "title": "Two Sum",
+    "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
+    "difficulty": "Easy",
+    "tags": [
+      "Arrays",
+      "Hash Table"
+    ],
+    "solvedBy": [],
+    "input": "An array of integers nums and an integer target.",
+    "codeStubs": [
+      {
+        "cpp": "vector<int> twoSum(vector<int>& nums, int target) {\n    // Your code here\n}",
+        "java": "public int[] twoSum(int[] nums, int target) {\n    // Your code here\n    return new int[]{0,0};\n}",
+        "python": "def two_sum(nums, target):\n    # Your code here\n    pass",
+        "js": "function twoSum(nums, target) {\n    // Your code here\n}"
+      }
+    ],
+    "output": [
+      {
+        "cpp": "vector<int>",
+        "java": "int[]",
+        "python": "list",
+        "js": "array"
+      }
+    ],
+    "constraints": "2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.",
+    "timelimit": 1,
+    "createdBy": "admin",
+    "testCases": [
+      {
+        "input": "[2,7,11,15]\n9",
+        "output": "[0,1]",
+        "sample": true,
+        "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."
+      },
+      {
+        "input": "[3,2,4]\n6",
+        "output": "[1,2]",
+        "sample": true,
+        "explanation": "Because nums[1] + nums[2] == 6, we return [1, 2]."
+      },
+      {
+        "input": "[3,3]\n6",
+        "output": "[0,1]",
+        "sample": true,
+        "explanation": "Because nums[0] + nums[1] == 6, we return [0, 1]."
+      }
+    ]
+  },
+  {
+    "email": "tejasripacharu@gmail.com",
+    "password": "Chumkey@7478"
   }
 ]

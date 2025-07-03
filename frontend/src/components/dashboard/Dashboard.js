@@ -1,12 +1,15 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { FaUser, FaCode, FaCalendarAlt, FaChartLine } from 'react-icons/fa';
+import ProblemsList from './ProblemsList';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [error, setError] = useState(null);         
+  const [loading, setLoading] = useState(true);    
   const [problems, setProblems] = useState([]);
   const [userStats, setUserStats] = useState({
     problemsSolved: 0,
@@ -16,25 +19,33 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    const fetchProblems = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await axios.get('/api/problems');
-        if (Array.isArray(response.data)) {
-          setProblems(response.data);
-        } else if (response.data && Array.isArray(response.data.problems)) {
-          setProblems(response.data.problems);
+        // Fetch problems
+        const problemsRes = await axios.get('/api/problems');
+        console.log('problemsRes.data =', problemsRes.data); //DEBUG LINE
+
+        // Handle different response formats - ensure we always have an array
+        if (Array.isArray(problemsRes.data)) {
+          setProblems(problemsRes.data);
+        } else if (problemsRes.data && Array.isArray(problemsRes.data.problems)) {
+          setProblems(problemsRes.data.problems);
         } else {
-          console.error('Problems data is not an array:', response.data);
+          console.error('Unexpected API response format:', problemsRes.data);
           setProblems([]);
         }
-      } catch (error) {
-        console.error('Error fetching problems:', error);
-        setProblems([]);
+        
+        setLoading(false);
+        // Rest of your fetching code...
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data');
+        setLoading(false);
       }
     };
-
-    fetchProblems();
-  }, []);
+  
+    fetchDashboardData();
+  }, [user]);
 
   // Sample data - in a real app, this would come from API calls
   const recentActivity = [
@@ -48,18 +59,21 @@ const Dashboard = () => {
     { id: 202, title: 'Biweekly Contest 82', date: '2023-07-29 08:00 AM', duration: '90 minutes' }
   ];
 
-  const getDifficultyColor = (difficulty) => {
+  function getDifficultyColor(difficulty) {
+    if (!difficulty) return "text-gray-400"; // fallback color
+  
     switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return 'text-green-500';
-      case 'medium':
-        return 'text-yellow-600';
-      case 'hard':
-        return 'text-red-500';
+      case "easy":
+        return "text-green-500";
+      case "medium":
+        return "text-yellow-500";
+      case "hard":
+        return "text-red-500";
       default:
-        return 'text-gray-700';
+        return "text-gray-400";
     }
-  };
+  }
+  
 
   return (
     <div className="bg-gray-50 min-h-screen pt-6 pb-12">
@@ -137,39 +151,43 @@ const Dashboard = () => {
           </div>
 
           {/* Available Problems */}
-          <div className="bg-white rounded-lg shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <FaCode className="text-primary-500 mr-2" />
-                <h2 className="text-lg font-bold">Problems</h2>
-              </div>
-              <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
-            </div>
-            <div className="space-y-3">
-              {problems.slice(0, 5).map(problem => (
-                <div key={problem._id} className="border-b pb-2 last:border-0">
-                  <div className="flex justify-between">
-                    <div>
-                      <Link to={`/problems/${problem._id}`} className="font-medium hover:text-primary-600">
-                        {problem.title}
-                      </Link>
-                      <p className={`text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>
-                    </div>
-                    <div className="text-xs text-gray-500 flex flex-wrap gap-1">
-                      {problem.tags.slice(0, 2).map((tag, index) => (
-                        <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {problems.length === 0 && (
-                <p className="text-gray-500">No problems available</p>
-              )}
-            </div>
+<div className="bg-white rounded-lg shadow-sm p-5">
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center">
+      <FaCode className="text-primary-500 mr-2" />
+      <h2 className="text-lg font-bold">Available Problems</h2>
+    </div>
+    <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
+  </div>
+  <div className="space-y-3">
+    {problems.slice(0, 2).map(problem => (
+      <div key={problem.id} className="border-b pb-2 last:border-0">
+        <div className="flex justify-between">
+          <div>
+            <Link to={`/problems/${problem.id}`} className="font-medium hover:text-primary-600">
+              {problem.title}
+            </Link>
+            <p className={`text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>
           </div>
+          <div className="text-xs text-gray-500 flex flex-wrap gap-1">
+            {problem.tags.slice(0, 2).map((tag, index) => (
+              <span
+              key={index}
+              title={tag}
+              className="inline-flex items-center justify-center bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md text-xs font-medium hover:bg-gray-200 transition"
+            >
+              {tag}
+            </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))}
+    {problems.length === 0 && (
+      <p className="text-gray-500">No problems available</p>
+    )}
+  </div>
+</div>
 
           {/* Upcoming Contests */}
           <div className="bg-white rounded-lg shadow-sm p-5">
