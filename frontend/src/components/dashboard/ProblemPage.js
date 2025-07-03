@@ -170,7 +170,7 @@ const ProblemPage = () => {
                 {/* Problem Description */}
                 <div className="lg:col-span-5">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center text-left mb-4">
                             <h1 className="text-2xl font-bold text-gray-800">{problem.title}</h1>
                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(problem.difficulty)}`}>
                                 {problem.difficulty}
@@ -185,7 +185,7 @@ const ProblemPage = () => {
                             ))}
                         </div>
                         
-                        <div className="prose max-w-none mb-6">
+                        <div className="text-left prose max-w-none mb-6">
                             <h3 className="text-lg font-medium mb-3 text-gray-800">Description</h3>
                             <div className={`text-gray-700 ${!showFullDescription && 'max-h-[200px] overflow-hidden relative'}`}>
                                 <div className="whitespace-pre-line">{problem.description}</div>
@@ -204,13 +204,13 @@ const ProblemPage = () => {
                         </div>
                         
                         {problem.constraints && (
-                            <div className="mb-6">
+                            <div className="text-left mb-6">
                                 <h3 className="text-lg font-medium mb-3 text-gray-800">Constraints</h3>
                                 <div className="bg-gray-50 p-4 rounded-lg text-gray-700 whitespace-pre-line font-mono text-sm">{problem.constraints}</div>
                             </div>
                         )}
                         
-                        <div className="mb-6">
+                        <div className="text-left mb-6">
                             <h3 className="text-lg font-medium mb-3 text-gray-800">Examples</h3>
                             {problem.testCases?.filter(tc => tc.sample).map((testCase, index) => (
                                 <div key={index} className="mb-4 border border-gray-100 rounded-lg overflow-hidden">

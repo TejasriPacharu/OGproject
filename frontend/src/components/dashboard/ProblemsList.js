@@ -113,23 +113,23 @@ const ProblemsList = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solved By</th>
+                <th className="items-center justify-center py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                <th className="items-center justify-center py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                <th className="items-center justify-center py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                <th className="items-center justify-center py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                <th className="items-center justify-center py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solved By</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {Array.isArray(filteredProblems) && filteredProblems.map((problem, index) => (
-                <tr key={problem._id} className="hover:bg-blue-50 transition-colors duration-200">
-                  <td className="py-4 px-6 text-sm font-medium text-gray-500">{index + 1}</td>
-                  <td className="py-4 px-6">
+                <tr key={problem.id} className="hover:bg-blue-50 transition-colors duration-200">
+                  <td className="py-4 px-6 text-sm font-medium text-gray-500 text-left">{index+1}</td>
+                  <td className="text-left py-4 px-6">
                     <Link to={`/problems/${problem.id}`} className="text-blue-600 hover:text-blue-800 text-base font-medium hover:underline">
                       {problem.title}
                       </Link>
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="text-left py-4 px-6">
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(problem.difficulty)}`}>
                       {problem.difficulty}
                     </span>
@@ -147,7 +147,7 @@ const ProblemsList = () => {
                       ))}
                     </div>
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="text-left py-4 px-6">
                     <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {problem.solvedBy ? problem.solvedBy.length : 0} users
                     </div>

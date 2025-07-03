@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { FaUser} from 'react-icons/fa';
 
 const MainNavbar = () => {
   const { isAuthenticated, user, logout } = useContext(AuthContext);
@@ -19,13 +20,10 @@ const MainNavbar = () => {
   const authLinks = (
     <div className="flex items-center space-x-4">
       {user && (
-        <span className="hidden md:inline text-white">
-          Welcome, {user.name}
-        </span>
+        <div className="bg-white rounded-full p-3 mr-4">
+          <FaUser className="text-primary-600 text-xl" />
+        </div>
       )}
-      <Link to="/dashboard" className="text-white hover:text-gray-200">
-        Dashboard
-      </Link>
       <button
         onClick={handleLogout}
         className="bg-transparent border border-white text-white px-3 py-1 rounded hover:bg-white hover:text-primary-600 transition-colors"
@@ -85,10 +83,13 @@ const MainNavbar = () => {
           {/* Desktop navigation */}
           <div className="hidden md:flex items-center justify-between flex-1 pl-10">
             <div className="flex space-x-4">
-              <Link to="/" className="font-code font-bold text-white hover:text-gray-200">Home</Link>
-              <Link to="/problems" className="font-code font-bold text-white hover:text-gray-200">Problems</Link>
-              <Link to="/contests" className="font-code font-bold text-white hover:text-gray-200">Contests</Link>
-              <Link to="/leaderboard" className="font-code font-bold text-white hover:text-gray-200">Leaderboard</Link>
+              {isAuthenticated ? <Link to="/dashboard" className="font-bold text-white hover:text-gray-200">
+        Dashboard
+      </Link>: <Link to="/" className="font-bold text-white hover:text-gray-200">Home</Link>}
+              
+              <Link to="/problems" className="font-bold text-white hover:text-gray-200">Problems</Link>
+              <Link to="/contests" className="font-bold text-white hover:text-gray-200">Contests</Link>
+              <Link to="/leaderboard" className="font-bold text-white hover:text-gray-200">Leaderboard</Link>
             </div>
             
             <div className="flex items-center">

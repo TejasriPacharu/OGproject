@@ -1,13 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { FaUser, FaCode, FaCalendarAlt, FaChartLine } from 'react-icons/fa';
-import ProblemsList from './ProblemsList';
-import { useNavigate, Link } from 'react-router-dom';
+import { FaCode, FaCalendarAlt, FaChartLine } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
   const [error, setError] = useState(null);         
   const [loading, setLoading] = useState(true);    
   const [problems, setProblems] = useState([]);
@@ -79,35 +77,25 @@ const Dashboard = () => {
     <div className="bg-gray-50 min-h-screen pt-6 pb-12">
       <div className="container mx-auto px-4">
         {/* User Info Card */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-md text-white p-6 mb-6">
-          <div className="md:flex justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <div className="flex items-center">
-                <div className="bg-white rounded-full p-3 mr-4">
-                  <FaUser className="text-primary-600 text-xl" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold">{user?.name}</h1>
-                  <p className="opacity-90">{user?.email}</p>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+        <div className="bg-gradient-to-l from-green-300 via-blue-500 to-purple-600 rounded-lg shadow-md text-white p-6 mb-6">
+          <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center w-full">
               <div>
-                <p className="text-sm opacity-75">Problems Solved</p>
-                <p className="text-xl font-bold">{userStats.problemsSolved}</p>
+                <p className="text-lg font-bold opacity-90">Solved</p>
+                <p className="text-6xl font-bold">{userStats.problemsSolved}</p>
               </div>
               <div>
-                <p className="text-sm opacity-75">Contest Rating</p>
-                <p className="text-xl font-bold">{userStats.contestRating}</p>
+                <p className="text-lg font-bold opacity-90">Contest Rating</p>
+                <p className="text-6xl font-bold">{userStats.contestRating}</p>
               </div>
               <div>
-                <p className="text-sm opacity-75">Global Rank</p>
-                <p className="text-xl font-bold">{userStats.globalRank}</p>
+                <p className="text-lg font-bold opacity-90">Global Rank</p>
+                <p className="text-6xl font-bold">{userStats.globalRank}</p>
               </div>
               <div>
-                <p className="text-sm opacity-75">Streak</p>
-                <p className="text-xl font-bold">{userStats.streak} days</p>
+                <p className="text-lg font-bold opacity-90">Streak</p>
+                <p className="text-6xl font-bold">{userStats.streak}</p>
+                <p className="font-press text-sm">days</p>
               </div>
             </div>
           </div>
@@ -151,43 +139,43 @@ const Dashboard = () => {
           </div>
 
           {/* Available Problems */}
-<div className="bg-white rounded-lg shadow-sm p-5">
-  <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center">
-      <FaCode className="text-primary-500 mr-2" />
-      <h2 className="text-lg font-bold">Available Problems</h2>
-    </div>
-    <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
-  </div>
-  <div className="space-y-3">
-    {problems.slice(0, 2).map(problem => (
-      <div key={problem.id} className="border-b pb-2 last:border-0">
-        <div className="flex justify-between">
-          <div>
-            <Link to={`/problems/${problem.id}`} className="font-medium hover:text-primary-600">
-              {problem.title}
-            </Link>
-            <p className={`text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>
+          <div className="bg-white rounded-lg shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <FaCode className="text-primary-500 mr-2" />
+                <h2 className="text-lg font-bold">Available Problems</h2>
+              </div>
+              <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
+            </div>
+            <div className="space-y-3">
+              {problems.slice(0, 2).map(problem => (
+                <div key={problem.id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
+                  <div className="flex justify-between">
+                    <div>
+                      <Link to={`/problems/${problem.id}`} className="font-medium hover:text-primary-600">
+                        {problem.title}
+                      </Link>
+                      <p className={`text-left text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {problem.tags.slice(0, 2).map((tag, index) => (
+                        <span
+                        key={index}
+                        title={tag}
+                        className="bg-gray-100 text-gray-700 px-2 py-3 rounded text-xs font-medium hover:bg-gray-200 transition"
+                      >
+                        {tag}
+                      </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {problems.length === 0 && (
+                <p className="text-gray-500">No problems available</p>
+              )}
+            </div>
           </div>
-          <div className="text-xs text-gray-500 flex flex-wrap gap-1">
-            {problem.tags.slice(0, 2).map((tag, index) => (
-              <span
-              key={index}
-              title={tag}
-              className="inline-flex items-center justify-center bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md text-xs font-medium hover:bg-gray-200 transition"
-            >
-              {tag}
-            </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    ))}
-    {problems.length === 0 && (
-      <p className="text-gray-500">No problems available</p>
-    )}
-  </div>
-</div>
 
           {/* Upcoming Contests */}
           <div className="bg-white rounded-lg shadow-sm p-5">
