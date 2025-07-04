@@ -61,7 +61,7 @@ const ProblemPage = () => {
         setStatus('Running...');
         
         try {
-            const response = await axios.post('/api/submissions/run', {
+            const response = await axios.post('/api/code/run', {
                 problemId: id,
                 code,
                 language
@@ -84,7 +84,7 @@ const ProblemPage = () => {
         setStatus('Submitting...');
         
         try {
-            const response = await axios.post('/api/submissions/submit', {
+            const response = await axios.post('/api/code/submit', {
                 problemId: id,
                 userId: user?._id,
                 code,

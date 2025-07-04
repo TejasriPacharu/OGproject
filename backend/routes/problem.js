@@ -3,9 +3,8 @@ const {
     getProblemByID,
     createProblem,
     editProblem,
-    deleteProblem 
+    deleteProblem,
 } = require("../controllers/problem");
-
 
 const router = require("express").Router();
 
@@ -17,6 +16,5 @@ router.route("/:id")
       .get(getProblemByID)
       .put(editProblem)
       .delete(deleteProblem)
-
 
 module.exports = router;
