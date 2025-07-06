@@ -86,7 +86,7 @@ const ProblemPage = () => {
         try {
             const response = await axios.post('/api/code/submit', {
                 problemId: id,
-                userId: user?._id,
+                userId: user.id,
                 code,
                 language
             });

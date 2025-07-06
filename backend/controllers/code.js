@@ -7,14 +7,23 @@ const Problem = require("../models/Problem");
 const Submission = require("../models/Submission");
 
 const runCode = async (req, res) => {
-    const { language = "cpp", code, input = "" } = req.body;
-    if (!code) {
-        return res.status(404).json({ message: "empty code!" });
+    let { language, code, problemId } = req.body;
+
+    if (!code || !problemId) {
+        return res.status(400).json({ message: "Required fields are missing!" });
     }
+
     try {
+        const problemsPath = path.join(__dirname, '../data/problems.json');
+        const problemsData = JSON.parse(fs.readFileSync(problemsPath, 'utf8'));
+        
+        const problemData = problemsData.find(p => p.id === problemId);
+        const timelimit = problemData.timelimit;
+        const input = problemData.testCases[0].input;
+
         const filePath = await generateFile(language, code);
         const inputPath = await generateInputFile(input || "");
-        const timelimit = 5;
+
         let output;
 
         if (language === "cpp") {
@@ -39,20 +48,15 @@ const submitCode = async (req, res) => {
         const filepath = await generateFile(language, code);
         let output;
 
-        const problem = await Problem.findById(problemId);
-        if (!problem) {
-            return res.status(404).json({ message: "No problem found!" });
-        }
-
-        const timelimit = problem.timelimit || 5;
-        
         // Read problems.json file to get the test case input
         const problemsPath = path.join(__dirname, '../data/problems.json');
         const problemsData = JSON.parse(fs.readFileSync(problemsPath, 'utf8'));
         
         // Find the problem by ID in the problems.json
         const problemData = problemsData.find(p => p.id === problemId);
+        const timelimit = problemData.timelimit
         
+        console.log("Problem ID :", problemId);
         if (!problemData || !problemData.testCases || problemData.testCases.length === 0) {
             return res.status(404).json({ message: "No test cases found for this problem!" });
         }
@@ -69,6 +73,7 @@ const submitCode = async (req, res) => {
 
         if (language === "cpp") {
             console.log("Starting C++ test cases execution...");
+            console.log("Timelimit:", timelimit);
             try {
                 output = await cppTestCases(
                     filepath,
@@ -87,17 +92,17 @@ const submitCode = async (req, res) => {
             code,
             language,
             output,
-            problemId,
+            problemId: problemData.id,
             userId,
         });
         await submission.save();
 
-        if (output.trim().toLowerCase() === "accepted") {
-            if (!problem.solvedBy.includes(userId)) {
-                problem.solvedBy.push(userId);
-                await problem.save();
-            }
-        }
+        // if (output.trim().toLowerCase() === "accepted") {
+        //     if (!problemData.solvedBy.includes(userId)) {
+        //         problemData.solvedBy.push(userId);
+        //         await problemData.save();
+        //     }
+        // }
 
         res.json({ filepath, inputPath, output });
 
@@ -106,7 +111,7 @@ const submitCode = async (req, res) => {
 
         const submission = new Submission({
             userId,
-            problemId,
+            problemId: problemData.id,
             language,
             code,
             output: "failed",

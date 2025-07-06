@@ -126,5 +126,7 @@ module.exports = {
     getProblemByID,
     createProblem,
     editProblem,
-    deleteProblem
+    deleteProblem,
+    getProblemsFromFile,
+    writeProblemsToFile
 }
