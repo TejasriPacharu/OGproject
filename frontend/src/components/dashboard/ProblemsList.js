@@ -125,7 +125,7 @@ const ProblemsList = () => {
                 <tr key={problem.id} className="hover:bg-blue-50 transition-colors duration-200">
                   <td className="py-4 px-6 text-sm font-medium text-gray-500 text-left">{index+1}</td>
                   <td className="text-left py-4 px-6">
-                    <Link to={`/problems/${problem.id}`} className="text-blue-600 hover:text-blue-800 text-base font-medium hover:underline">
+                    <Link to={`/problems/${problem._id}`} className="text-blue-600 hover:text-blue-800 text-base font-medium hover:underline">
                       {problem.title}
                       </Link>
                   </td>

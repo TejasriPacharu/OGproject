@@ -7,11 +7,6 @@ const ProblemSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    id: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     title: {
       type: String,
       required: true,

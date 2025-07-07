@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);         
   const [loading, setLoading] = useState(true);    
   const [problems, setProblems] = useState([]);
+  const [solved, setSolved] = useState([]);
   const [userStats, setUserStats] = useState({
     problemsSolved: 0,
     contestRating: 0,
@@ -23,18 +24,38 @@ const Dashboard = () => {
         const problemsRes = await axios.get('/api/problems');
         console.log('problemsRes.data =', problemsRes.data); //DEBUG LINE
 
+        const problemsToBeSolved = problemsRes.data.problems.filter(
+          problem => !(problem.solvedBy || []).includes(String(user.id))
+        );
+        
+        console.log('problemsToBeSolved =', problemsToBeSolved); //DEBUG LINE
+        
+        const solvedProblems = problemsRes.data.problems.filter(
+          problem => (problem.solvedBy || []).includes(String(user.id))
+        );
+        
+        console.log('solvedProblems =', solvedProblems); //DEBUG LINE
+        
         // Handle different response formats - ensure we always have an array
-        if (Array.isArray(problemsRes.data)) {
-          setProblems(problemsRes.data);
-        } else if (problemsRes.data && Array.isArray(problemsRes.data.problems)) {
-          setProblems(problemsRes.data.problems);
+        if (Array.isArray(problemsToBeSolved)) {
+          setProblems(problemsToBeSolved);
+        } else if (problemsToBeSolved && Array.isArray(problemsToBeSolved.problems)) {
+          setProblems(problemsToBeSolved.problems);
         } else {
           console.error('Unexpected API response format:', problemsRes.data);
           setProblems([]);
         }
         
+        if (Array.isArray(solvedProblems)) {
+          setSolved(solvedProblems);
+        } else if (solvedProblems && Array.isArray(solvedProblems.problems)) {
+          setSolved(solvedProblems.problems);
+        } else {
+          console.error('Unexpected API response format:', problemsRes.data);
+          setSolved([]);
+        }
+        
         setLoading(false);
-        // Rest of your fetching code...
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
@@ -44,13 +65,6 @@ const Dashboard = () => {
   
     fetchDashboardData();
   }, [user]);
-
-  // Sample data - in a real app, this would come from API calls
-  const recentActivity = [
-    { id: 1, type: 'submission', problem: 'Two Sum', result: 'Accepted', date: '2023-07-15' },
-    { id: 2, type: 'contest', name: 'Weekly Contest 305', rank: '156', date: '2023-07-10' },
-    { id: 3, type: 'submission', problem: 'Valid Parentheses', result: 'Wrong Answer', date: '2023-07-08' }
-  ];
 
   const upcomingContests = [
     { id: 201, title: 'Weekly Contest 306', date: '2023-07-22 08:00 AM', duration: '90 minutes' },
@@ -109,33 +123,34 @@ const Dashboard = () => {
               <h2 className="text-lg font-bold">Recent Activity</h2>
             </div>
             <div className="space-y-3">
-              {recentActivity.length > 0 ? (
-                recentActivity.map(activity => (
-                  <div key={activity.id} className="border-b pb-2 last:border-0">
-                    <div className="flex justify-between">
-                      <div>
-                        {activity.type === 'submission' ? (
-                          <>
-                            <p className="font-medium">{activity.problem}</p>
-                            <p className={`text-sm ${activity.result === 'Accepted' ? 'text-green-500' : 'text-red-500'}`}>
-                              {activity.result}
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="font-medium">{activity.name}</p>
-                            <p className="text-sm">Rank: {activity.rank}</p>
-                          </>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500">{activity.date}</p>
+              {solved.map(solved => (
+                <div key={solved.id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
+                  <div className="flex justify-between">
+                    <div>
+                      <Link to={`/problems/${solved.id}`} className="font-medium hover:text-primary-600">
+                        {solved.title}
+                      </Link>
+                      <p className={`text-left text-sm ${getDifficultyColor(solved.difficulty)}`}>{solved.difficulty}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {solved.tags.slice(0, 2).map((tag, index) => (
+                        <span
+                        key={index}
+                        title={tag}
+                        className="bg-gray-100 text-gray-700 px-2 py-3 rounded text-xs font-medium hover:bg-gray-200 transition"
+                      >
+                        {tag}
+                      </span>
+                      ))}
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-gray-500">No recent activity</p>
+                </div>
+              ))}
+              {solved.length === 0 && (
+                <p className="text-gray-500">No activity recently</p>
               )}
             </div>
+            
           </div>
 
           {/* Available Problems */}
@@ -148,8 +163,8 @@ const Dashboard = () => {
               <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
             </div>
             <div className="space-y-3">
-              {problems.slice(0, 2).map(problem => (
-                <div key={problem.id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
+              {problems.map(problem => (
+                <div key={problem._id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
                   <div className="flex justify-between">
                     <div>
                       <Link to={`/problems/${problem.id}`} className="font-medium hover:text-primary-600">

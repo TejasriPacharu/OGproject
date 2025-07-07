@@ -1,48 +1,22 @@
-const fs = require('fs');
-const path = require('path');
 const Problem = require("../models/Problem");
 const User = require("../models/User");
 
-// Helper function to read problems from JSON file
-const getProblemsFromFile = () => {
-  try {
-    const problemsFilePath = path.join(__dirname, '../data/problems.json');
-    const problemsData = fs.readFileSync(problemsFilePath, 'utf8');
-    return JSON.parse(problemsData);
-  } catch (error) {
-    console.error('Error reading problems file:', error);
-    return [];
-  }
-};
-
-// Helper function to write problems to JSON file
-const writeProblemsToFile = (problems) => {
-  try {
-    const problemsFilePath = path.join(__dirname, '../data/problems.json');
-    const problemsData = JSON.stringify(problems, null, 2);
-    fs.writeFileSync(problemsFilePath, problemsData);
-  } catch (error) {
-    console.error('Error writing problems file:', error);
-  }
-};
-
 // retrieving all the problems -> GET
 const getAllProblems = async (req, res) => {
-    try{
-        // Use file-based problems instead of MongoDB
-        const problems = getProblemsFromFile();
-        return res.status(200).json({problems});
-    }catch(error){
-        console.error('Error getting all problems:', error);
-        return res.status(500).json({message: error.message});
-    }
-}
+  try {
+    const problems = await Problem.find({});
+
+    return res.status(200).json({ problems });
+  } catch (error) {
+    console.error('Error getting all problems:', error);
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 const getProblemByID = async (req, res) => {
     try {
-       // Use file-based problems instead of MongoDB
-       const problems = getProblemsFromFile();
-       const problem = problems.find(p => p.id === req.params.id);
+       const id = req.params.id;
+       const problem = await Problem.findById(id);
        
        if (!problem) {
          return res.status(404).json({message: 'Problem not found'});
@@ -56,77 +30,88 @@ const getProblemByID = async (req, res) => {
 }
 
 const createProblem = async (req, res) => {
-    try {
-        // Use file-based problems instead of MongoDB
-        const problems = getProblemsFromFile();
-        const newProblem = req.body;
-        problems.push(newProblem);
-        writeProblemsToFile(problems);
-        return res.status(201).json({problem: newProblem});
-    }catch(error){
-        console.error('Error creating problem:', error);
-        return res.status(500).json({message: error.message});
-    }
+      try {
+            const { slug,title, description, difficulty, tags, solvedBy, input, codeStubs, output, constraints, timelimit, createdBy, testCases } =
+              req.body;
+        
+            const problem = new Problem({
+              slug,
+              title,
+              description,
+              difficulty,
+              tags,
+              solvedBy,
+              input,
+              codeStubs,
+              output,
+              constraints,
+              timelimit,
+              createdBy,
+              testCases
+            });
+        
+            await problem.save();
+        
+            return res.status(200).json({ problem });
+          } catch (error) {
+            return res.status(500).json({
+              message: "Failed to create problem",
+              error: error.message,
+            });
+          }
 }
 
-const editProblem = async (req, res) => {
-    const id = req.params.id;
+const editProblemByID = async (req, res) => {
+  const id = req.params.id;
 
-    if(!id){
-        return res.status(400).json({message: "Problem ID is required"});
+  if (!id) {
+    return res.status(400).json({ message: "Problem ID is required" });
+  }
+
+  try {
+    const updatedProblem = await Problem.findByIdAndUpdate(id, req.body, {
+      new: true,           // return updated doc
+      runValidators: true  // ensure validation
+    });
+
+    if (!updatedProblem) {
+      return res.status(404).json({ message: "Problem not found" });
     }
 
-    try {
-       // Use file-based problems instead of MongoDB
-       const problems = getProblemsFromFile();
-       const problemIndex = problems.findIndex(p => p.id === id);
-       
-       if (problemIndex === -1) {
-         return res.status(404).json({message: 'Problem not found'});
-       }
-       
-       const updateData = req.body;
-       problems[problemIndex] = { ...problems[problemIndex], ...updateData };
-       writeProblemsToFile(problems);
-       return res.status(200).json({problem: problems[problemIndex]});
-    }catch(error){
-        console.error('Error editing problem:', error);
-        return res.status(500).json({message: error.message});
-    }
-}
+    return res.status(200).json({ problem: updatedProblem });
+  } catch (error) {
+    console.error('Error editing problem:', error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 
 const deleteProblem = async (req, res) => {
-    // delete based on id
-    const id = req.params.id;
-  
-    if (!id) {
-      return res.status(400).json({ message: "Missing required fields" });
+  const id = req.params.id;
+
+  if (!id) {
+    return res.status(400).json({ message: "Problem ID is required" });
+  }
+
+  try {
+    const deleted = await Problem.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Problem not found" });
     }
-  
-    try {
-       // Use file-based problems instead of MongoDB
-       const problems = getProblemsFromFile();
-       const problemIndex = problems.findIndex(p => p.id === id);
-       
-       if (problemIndex === -1) {
-         return res.status(404).json({message: 'Problem not found'});
-       }
-       
-       problems.splice(problemIndex, 1);
-       writeProblemsToFile(problems);
-       return res.status(200).json({message: "Problem deleted!"});
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json(error);
-    }
+
+    return res.status(200).json({ message: "Problem deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting problem:", error);
+    return res.status(500).json({ message: error.message });
+  }
 };
+
 
 module.exports = {
     getAllProblems,
     getProblemByID,
     createProblem,
-    editProblem,
-    deleteProblem,
-    getProblemsFromFile,
-    writeProblemsToFile
+    editProblemByID,
+    deleteProblem
 }

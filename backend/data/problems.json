@@ -1,7 +1,6 @@
 [
   {
     "slug": "two-sum",
-    "id": "prob001",
     "title": "Two Sum",
     "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
     "difficulty": "Easy",
@@ -9,7 +8,9 @@
       "Arrays",
       "Hash Table"
     ],
-    "solvedBy": [],
+    "solvedBy": [
+      "6862cbb695aa9de01ff6fd55"
+    ],
     "input": "An array of integers nums and an integer target.",
     "codeStubs": [
       {
@@ -39,7 +40,6 @@
       }
     ]
   },
-
   {
     "slug": "Add-Two-Numbers",
     "id": "prob002",
@@ -48,7 +48,7 @@
     "difficulty": "Medium",
     "tags": [
       "Linked List",
-      "Math", 
+      "Math",
       "Recursion"
     ],
     "solvedBy": [],
@@ -78,6 +78,87 @@
         "output": "[7,0,8]",
         "sample": true,
         "explanation": "342+465 = 807"
+      }
+    ]
+  },
+  {
+    "slug": "Longest-Substring-Without-Repeating-Characters",
+    "id": "prob003",
+    "title": "Longest Substring Without Repeating Characters",
+    "description": "Given a string s, find the length of the longest substring without duplicate characters.",
+    "difficulty": "Medium",
+    "tags": [
+      "String",
+      "Sliding Window",
+      "Hash Table"
+    ],
+    "solvedBy": [],
+    "input": "A string s.",
+    "codeStubs": [
+      {
+        "cpp": "int lengthOfLongestSubstring(string s){\n    // Your code here\n}",
+        "java": "public int lengthOfLongestSubstring(String s) {\n    // Your code here\n    return 0;\n}",
+        "python": "def length_of_longest_substring(s):\n    # Your code here\n    pass",
+        "js": "function lengthOfLongestSubstring(s) {\n    // Your code here\n}"
+      }
+    ],
+    "output": [
+      {
+        "cpp": "int",
+        "java": "int",
+        "python": "int",
+        "js": "int"
+      }
+    ],
+    "constraints": "0 <= s.length <= 5 * 10^4\ns consists of English letters, digits, symbols and spaces.",
+    "timelimit": 1,
+    "createdBy": "admin",
+    "testCases": [
+      {
+        "input": "s = \"abcabcbb\"",
+        "output": "3",
+        "sample": true,
+        "explanation": "The answer is \"abc\" with the length of 3."
+      }
+    ]
+  },
+  {
+    "slug": "Median-of-Two-Sorted-Arrays",
+    "title": "Median of Two Sorted Arrays",
+    "description": "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.",
+    "difficulty": "Hard",
+    "tags": [
+      "Array",
+      "Binary Search",
+      "Divide and Conquer"
+    ],
+    "solvedBy": [],
+    "input": "Two sorted arrays nums1 and nums2 of size m and n respectively.",
+    "codeStubs": [
+      {
+        "cpp": "double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2){\n    // Your code here\n}",
+        "java": "public double findMedianSortedArrays(int[] nums1, int[] nums2) {\n    // Your code here\n    return 0;\n}",
+        "python": "def find_median_sorted_arrays(nums1, nums2):\n    # Your code here\n    pass",
+        "js": "function findMedianSortedArrays(nums1, nums2) {\n    // Your code here\n}"
+      }
+    ],
+    "output": [
+      {
+        "cpp": "double",
+        "java": "double",
+        "python": "double",
+        "js": "double"
+      }
+    ],
+    "constraints": "nums1.length == m\nnums2.length == n\n0 <= m <= 1000\n0 <= n <= 1000\n1 <= m + n <= 2000\n-10^6 <= nums1[i], nums2[i] <= 10^6",
+    "timelimit": 1,
+    "createdBy": "admin",
+    "testCases": [
+      {
+        "input": "nums1 = [1,3], nums2 = [2]",
+        "output": "2.00000",
+        "sample": true,
+        "explanation": "merged array = [1,2,3] and median is 2."
       }
     ]
   }

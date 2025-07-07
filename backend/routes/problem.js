@@ -2,7 +2,7 @@ const {
     getAllProblems,
     getProblemByID,
     createProblem,
-    editProblem,
+    editProblemByID,
     deleteProblem,
 } = require("../controllers/problem");
 
@@ -14,7 +14,8 @@ router.route("/")
 
 router.route("/:id")
       .get(getProblemByID)
-      .put(editProblem)
+      .put(editProblemByID)
       .delete(deleteProblem)
+
 
 module.exports = router;

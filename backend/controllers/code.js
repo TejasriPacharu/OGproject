@@ -1,124 +1,99 @@
 const { cppExecution, cppTestCases } = require("../services/cpp.js");
 const { generateFile} = require("../services/generateFile");
 const { generateInputFile } = require("../services/generateInputFile");
-const fs = require('fs');
-const path = require('path');
 const Problem = require("../models/Problem");
 const Submission = require("../models/Submission");
+const path = require("path");
+const fs = require("fs");
 
 const runCode = async (req, res) => {
-    let { language, code, problemId } = req.body;
+    let { language, code, problemId} = req.body;
+    console.log("runCode called with language:", language);
+    console.log("runCode called with code:", code);
+    console.log("runCode called with problemId:", problemId);
 
-    if (!code || !problemId) {
-        return res.status(400).json({ message: "Required fields are missing!" });
+    if (code === "") {
+        return res.status(400).json({ message: "Code body cannot be empty!" });
     }
 
     try {
-        const problemsPath = path.join(__dirname, '../data/problems.json');
-        const problemsData = JSON.parse(fs.readFileSync(problemsPath, 'utf8'));
-        
-        const problemData = problemsData.find(p => p.id === problemId);
+        const problemData = await Problem.findById(problemId);
         const timelimit = problemData.timelimit;
         const input = problemData.testCases[0].input;
-
-        const filePath = await generateFile(language, code);
-        const inputPath = await generateInputFile(input || "");
-
+        const codeStubs = problemData.codeStubs;
+        const filePath = await generateFile(language, code, codeStubs);
+        const inputPath = await generateInputFile(input);
+        
         let output;
 
         if (language === "cpp") {
             output = await cppExecution(filePath, inputPath, timelimit);
+            output = output.replace(/\r?\n|\r/g, '');
+            output.trim();
         }
 
         return res.json({ filePath, inputPath, output });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({ error: error.message, stderr: error.stderr });
+        return res.status(500).json(error);
     }
 };
 
 const submitCode = async (req, res) => {
     let { language, code, problemId, userId } = req.body;
 
-    if (!code || !problemId || !userId) {
-        return res.status(400).json({ message: "Required fields are missing!" });
+    if (code === "") {
+        return res.status(400).json({ message: "Code body cannot be empty!" });
     }
 
     try {
-        const filepath = await generateFile(language, code);
+        const problemData = await Problem.findById(problemId);
+        const codeStubs = problemData.codeStubs;
+        const filePath = await generateFile(language, code, codeStubs);
         let output;
 
-        // Read problems.json file to get the test case input
-        const problemsPath = path.join(__dirname, '../data/problems.json');
-        const problemsData = JSON.parse(fs.readFileSync(problemsPath, 'utf8'));
         
-        // Find the problem by ID in the problems.json
-        const problemData = problemsData.find(p => p.id === problemId);
-        const timelimit = problemData.timelimit
-        
-        console.log("Problem ID :", problemId);
-        if (!problemData || !problemData.testCases || problemData.testCases.length === 0) {
-            return res.status(404).json({ message: "No test cases found for this problem!" });
-        }
-        
-        // Generate an input file from the test case
-        const inputContent = problemData.testCases[0].input;
-        console.log("Test case input content:", inputContent);
-        const inputPath = await generateInputFile(inputContent);
-        console.log("Generated input path:", inputPath);
-        
-        // Expected output from test case
-        const expectedOutput = problemData.testCases[0].output;
-        console.log("Expected output:", expectedOutput);
+        const testcases = problemData.testCases;
+        console.log("User ID : ", userId);
+        console.log("Problem ID : ", problemId);
+        console.log("Code : ", code);
+        console.log("Language : ", language);
+    
+        let verdict;
 
-        if (language === "cpp") {
-            console.log("Starting C++ test cases execution...");
-            console.log("Timelimit:", timelimit);
-            try {
-                output = await cppTestCases(
-                    filepath,
-                    inputPath,
-                    expectedOutput,
-                    timelimit
-                );
-                console.log("C++ test cases completed with output:", output);
-            } catch (error) {
-                console.error("Error in cppTestCases:", error);
-                output = "error";
+        for (let i = 0; i < testcases.length; i++) {
+            const inputPath = await generateInputFile(testcases[i].input);
+            const outputPath = testcases[i].output;
+
+            if (language === "cpp") {
+                output = await cppTestCases(filePath, inputPath, outputPath, problemData.timelimit);
             }
+
+            if (output.stderr) {
+                verdict = "Compilation Error";
+                break;
+            }
+
+            const expectedOutput = fs.readFileSync(testcases[i].output, "utf-8").trim();
+            const actualOutput = fs.readFileSync(outputPath, "utf-8").trim();
+
+            if (actualOutput !== expectedOutput) {
+                verdict = "Wrong Answer";
+                break;
+            }
+
+            fs.unlinkSync(outputPath);
         }
-
-        const submission = new Submission({
+        const submission = await Submission.create({
+            userId,
+            problemId,
             code,
             language,
-            output,
-            problemId: problemData.id,
-            userId,
+            verdict,
         });
-        await submission.save();
-
-        // if (output.trim().toLowerCase() === "accepted") {
-        //     if (!problemData.solvedBy.includes(userId)) {
-        //         problemData.solvedBy.push(userId);
-        //         await problemData.save();
-        //     }
-        // }
-
-        res.json({ filepath, inputPath, output });
-
-    } catch (err) {
-        console.error("Error during code submission:", err);
-
-        const submission = new Submission({
-            userId,
-            problemId: problemData.id,
-            language,
-            code,
-            output: "failed",
-        });
-        await submission.save();
-
-        return res.status(500).json({ stderr: err.message });
+        
+        return res.status(201).json({ message: "Submission successful!", submission });
+    } catch (error) {
+        return res.status(500).json(error);
     }
 };
 

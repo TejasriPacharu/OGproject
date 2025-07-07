@@ -62,7 +62,7 @@ const ProblemPage = () => {
         
         try {
             const response = await axios.post('/api/code/run', {
-                problemId: id,
+                problemId: problem._id,
                 code,
                 language
             });
@@ -85,7 +85,7 @@ const ProblemPage = () => {
         
         try {
             const response = await axios.post('/api/code/submit', {
-                problemId: id,
+                problemId: problem._id,
                 userId: user.id,
                 code,
                 language

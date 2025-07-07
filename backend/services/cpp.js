@@ -21,7 +21,7 @@ const normalize = (str) => {
     .trim();
 };
 
-const cppExecution = (filepath, inputPath, timelimit) => {
+const cppExecution = (filepath, inputPath,timelimit) => {
     const jobId = path.basename(filepath).split(".")[0];
     const outPath = path.join(path.dirname(filepath), `${jobId}.out`);
   
@@ -72,7 +72,6 @@ const cppTestCases = async (
     // Create a temporary file for the expected output
     const outputDir = path.join(__dirname, "outputs");
     const expectedOutputFile = path.join(outputDir, `expected_${path.basename(filePath, ".cpp")}.txt`);
-    
     // Ensure the output directory exists
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
