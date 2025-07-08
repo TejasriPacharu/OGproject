@@ -20,32 +20,39 @@ const generateInputFile = async (input) => {
   const input_filePath = path.join(dirInputs, input_filename);
   
   try {
-    // Process different input formats
     let formattedInput = "";
+
+  if (typeof input === 'string') {
+    // Case 1: Handle string inputs like "nums1 = [1,3], nums2 = [2]" or "[2,7,11,15], 9"
+    const items = [];
     
-    if (typeof input === 'string') {
-      // Handle string input like "nums1 = [1,3], nums2 = [2]"
-      const arrayMatches = input.match(/\[.*?\]/g);
-      if (arrayMatches) {
-        formattedInput = arrayMatches.join('\n');
-      } else {
-        // If no arrays found, use the string as-is
-        formattedInput = input;
-      }
-    } else if (Array.isArray(input)) {
-      // Handle direct array input like [[1,3], [2]]
-      formattedInput = input.map(arr => 
-        Array.isArray(arr) ? `[${arr.join(',')}]` : arr
-      ).join('\n');
-    } else if (typeof input === 'object') {
-      // Handle object input like {nums1: [1,3], nums2: [2]}
-      formattedInput = Object.values(input).map(val =>
-        Array.isArray(val) ? `[${val.join(',')}]` : val
-      ).join('\n');
-    } else {
-      // Handle other cases (numbers, etc.)
-      formattedInput = input.toString();
-    }
+    // Extract all arrays first (e.g., [1,3], [2])
+    const arrayMatches = input.match(/\[[^\]]*\]/g) || [];
+    items.push(...arrayMatches);
+    
+    // Extract standalone numbers not in arrays (e.g., 9 in "[...], 9")
+    const remainingParts = input.replace(/\[[^\]]*\]/g, ''); // Remove arrays
+    const numberMatches = remainingParts.match(/\b\d+\b/g) || [];
+    items.push(...numberMatches);
+    
+    formattedInput = items.join('\n');
+  } 
+  else if (Array.isArray(input)) {
+    // Case 2: Handle direct array input like [[1,3], [2]] or [[2,7,11,15], 9]
+    formattedInput = input.map(item => 
+      Array.isArray(item) ? `[${item.join(',')}]` : item
+    ).join('\n');
+  } 
+  else if (typeof input === 'object' && input !== null) {
+    // Case 3: Handle object input like {nums1: [1,3], nums2: [2]} or {nums: [2,7,11,15], target: 9}
+    formattedInput = Object.values(input).map(val =>
+      Array.isArray(val) ? `[${val.join(',')}]` : val
+    ).join('\n');
+  } 
+  else {
+    // Fallback: Convert to string
+    formattedInput = String(input);
+  }
 
     console.log("Formatted input:", formattedInput);
     

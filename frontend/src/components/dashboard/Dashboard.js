@@ -48,8 +48,16 @@ const Dashboard = () => {
         
         if (Array.isArray(solvedProblems)) {
           setSolved(solvedProblems);
+          setUserStats(prev => ({
+            ...prev,
+            problemsSolved: solvedProblems.length
+          }));
         } else if (solvedProblems && Array.isArray(solvedProblems.problems)) {
           setSolved(solvedProblems.problems);
+          setUserStats(prev => ({
+            ...prev,
+            problemsSolved: solvedProblems.length
+          }));
         } else {
           console.error('Unexpected API response format:', problemsRes.data);
           setSolved([]);
@@ -86,7 +94,6 @@ const Dashboard = () => {
     }
   }
   
-
   return (
     <div className="bg-gray-50 min-h-screen pt-6 pb-12">
       <div className="container mx-auto px-4">
@@ -124,10 +131,10 @@ const Dashboard = () => {
             </div>
             <div className="space-y-3">
               {solved.map(solved => (
-                <div key={solved.id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
+                <div key={solved._id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
                   <div className="flex justify-between">
                     <div>
-                      <Link to={`/problems/${solved.id}`} className="font-medium hover:text-primary-600">
+                      <Link to={`/problems/${solved._id}`} className="font-medium hover:text-primary-600">
                         {solved.title}
                       </Link>
                       <p className={`text-left text-sm ${getDifficultyColor(solved.difficulty)}`}>{solved.difficulty}</p>
@@ -167,7 +174,7 @@ const Dashboard = () => {
                 <div key={problem._id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
                   <div className="flex justify-between">
                     <div>
-                      <Link to={`/problems/${problem.id}`} className="font-medium hover:text-primary-600">
+                      <Link to={`/problems/${problem._id}`} className="font-medium hover:text-primary-600">
                         {problem.title}
                       </Link>
                       <p className={`text-left text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>

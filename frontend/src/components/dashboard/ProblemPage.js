@@ -3,6 +3,7 @@ import {useEffect, useState, useContext} from 'react';
 import {AuthContext} from '../../context/AuthContext';
 import axios from 'axios';
 import Editor from '@monaco-editor/react';
+import {FaCheckCircle} from 'react-icons/fa';
 
 const ProblemPage = () => {
     const {id} = useParams();
@@ -12,7 +13,7 @@ const ProblemPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [code, setCode] = useState('');
-    const [language, setLanguage] = useState('javascript');
+    const [language, setLanguage] = useState('cpp');
     const [output, setOutput] = useState('');
     const [status, setStatus] = useState('');
     const [isRunning, setIsRunning] = useState(false);
@@ -175,6 +176,9 @@ const ProblemPage = () => {
                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(problem.difficulty)}`}>
                                 {problem.difficulty}
                             </span>
+                            {problem.solvedBy?.includes(String(user.id)) && (
+                                <FaCheckCircle className="text-green-600"/>
+                            )}
                         </div>
                         
                         <div className="mb-4 flex flex-wrap gap-2">

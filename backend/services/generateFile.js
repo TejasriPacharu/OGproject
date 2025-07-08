@@ -105,8 +105,7 @@ const generateFile = async (format, content, stubSignature) => {
       }
     }).join("\n");
     
-    const functionImplementation = `${signatureLine} {
-    ${content}}`;
+    const functionImplementation = `${content}`;
 
     const printResult = (returnType === "vector<int>") ? `
     cout << "[";

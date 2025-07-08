@@ -98,10 +98,28 @@ const submitCode = async (req, res) => {
             verdict,
             status,
         });
+
+        if(status === "solved"){
+            const problemData = await Problem.findById(problemId);
+            const solvedBy = problemData.solvedBy || [];
+            solvedBy.push(userId);
+            await Problem.updateOne({ _id: problemId }, { solvedBy });
+        }
         
         return res.status(201).json({ message: "Submission successful!", submission });
     } catch (error) {
-        return res.status(500).json(error);
+        
+        const submission = await Submission.create({
+            userId,
+            problemId,
+            language,
+            code,
+            output,
+            verdict,
+            status : "failed",
+        });
+
+        return res.status(500).json({message: "Submission Failed !", submission});
     }
 };
 

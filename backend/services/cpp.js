@@ -79,7 +79,9 @@ const cppTestCases = async (
     
     // Write the expected output to a file
     await fs.promises.writeFile(expectedOutputFile, expectedOutput);
-  
+    console.log("Expected output file path:", expectedOutputFile);
+    
+    
     const jobId = path.basename(filePath).split(".")[0];
     const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
     const outPath = path.join(path.dirname(filePath), `${jobId}.out`);

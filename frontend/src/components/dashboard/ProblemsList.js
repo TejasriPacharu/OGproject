@@ -1,18 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
+import { FaCheckCircle } from 'react-icons/fa';
+import { FaRegCircle } from 'react-icons/fa';
+
 
 const ProblemsList = () => {
+  const {user } = useContext(AuthContext);
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // added filter state
+  const [solved, setSolved] = useState([]);
 
   useEffect(() => {
     const fetchProblems = async () => {
       try {
         const response = await axios.get('/api/problems');
         // Handle different response formats - ensure we always have an array
+
+        const solvedProblems = response.data.problems.filter(
+          problem => (problem.solvedBy || []).includes(String(user.id))
+        );
+
+        if (Array.isArray(solvedProblems)) {
+          setSolved(solvedProblems);
+        } else if (solvedProblems && Array.isArray(solvedProblems.problems)) {
+          setSolved(solvedProblems.problems);
+        } else {
+          console.error('Unexpected API response format:', response.data);
+          setSolved([]);
+        }
+
         if (Array.isArray(response.data)) {
           setProblems(response.data);
         } else if (response.data && Array.isArray(response.data.problems)) {
@@ -123,7 +144,13 @@ const ProblemsList = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {Array.isArray(filteredProblems) && filteredProblems.map((problem, index) => (
                 <tr key={problem.id} className="hover:bg-blue-50 transition-colors duration-200">
-                  <td className="py-4 px-6 text-sm font-medium text-gray-500 text-left">{index+1}</td>
+                  <td className="py-4 px-6 text-sm font-medium text-left">
+                    {solved.some(p => p._id === problem._id) ? (
+                      <FaCheckCircle className="text-green-500 text-lg" />
+                    ) : (
+                      <FaRegCircle className="text-gray-500 text-lg" />
+                    )}
+                  </td>
                   <td className="text-left py-4 px-6">
                     <Link to={`/problems/${problem._id}`} className="text-blue-600 hover:text-blue-800 text-base font-medium hover:underline">
                       {problem.title}
