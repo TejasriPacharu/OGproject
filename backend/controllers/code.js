@@ -53,12 +53,10 @@ const submitCode = async (req, res) => {
 
         
         const testcases = problemData.testCases;
-        console.log("User ID : ", userId);
-        console.log("Problem ID : ", problemId);
-        console.log("Code : ", code);
-        console.log("Language : ", language);
+        
     
         let verdict;
+        let status;
 
         for (let i = 0; i < testcases.length; i++) {
             const inputPath = await generateInputFile(testcases[i].input);
@@ -66,29 +64,39 @@ const submitCode = async (req, res) => {
 
             if (language === "cpp") {
                 output = await cppTestCases(filePath, inputPath, outputPath, problemData.timelimit);
+                status = "attempted";
             }
+            console.log("OUTPUT: ",output);
 
+            if(output === "accepted") {
+                verdict = "Accepted";
+            }
             if (output.stderr) {
                 verdict = "Compilation Error";
                 break;
             }
 
-            const expectedOutput = fs.readFileSync(testcases[i].output, "utf-8").trim();
-            const actualOutput = fs.readFileSync(outputPath, "utf-8").trim();
+            // const expectedOutput = fs.readFileSync(testcases[i].output, "utf-8").trim();
+            // const actualOutput = outputPath;
 
-            if (actualOutput !== expectedOutput) {
+            if (output === "failed") {
                 verdict = "Wrong Answer";
                 break;
             }
 
-            fs.unlinkSync(outputPath);
+            if( i === testcases.length - 1){
+                status = "solved";
+            }
         }
+        
         const submission = await Submission.create({
             userId,
             problemId,
-            code,
             language,
+            code,
+            output,
             verdict,
+            status,
         });
         
         return res.status(201).json({ message: "Submission successful!", submission });

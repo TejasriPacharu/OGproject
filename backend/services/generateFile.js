@@ -114,7 +114,11 @@ const generateFile = async (format, content, stubSignature) => {
         cout << result[i];
         if (i < result.size() - 1) cout << ",";
     }
-    cout << "]" << endl;` : `cout << result << endl;`;
+    cout << "]" << endl;` : 
+    (returnType === "double" || returnType === "float") ? `
+    cout << fixed << setprecision(2) << result << endl;` : `
+    cout << result << endl;`;
+
 
     finalContent = `#include <iostream>
 #include <vector>
@@ -125,6 +129,7 @@ const generateFile = async (format, content, stubSignature) => {
 #include <queue>
 #include <stack>
 #include <sstream>
+#include <iomanip>
 
 using namespace std;
 
