@@ -76,8 +76,6 @@ const submitCode = async (req, res) => {
                 break;
             }
 
-            // const expectedOutput = fs.readFileSync(testcases[i].output, "utf-8").trim();
-            // const actualOutput = outputPath;
 
             if (output === "failed") {
                 verdict = "Wrong Answer";
@@ -123,7 +121,27 @@ const submitCode = async (req, res) => {
     }
 };
 
+const customCheck = async (req, res) => {
+    let {problemId,language, code, input} = req.body;
+    console.log("customCheck called with problemId:", problemId);
+    console.log("customCheck called with language:", language);
+    console.log("customCheck called with code:", code);
+    console.log("customCheck called with input:", input);
+
+    try {
+        const problemData = await Problem.findById(problemId);
+        const codeStubs = problemData.codeStubs;
+        const filePath = await generateFile(language, code, codeStubs);
+        const inputPath = await generateInputFile(input);
+        const output = await cppExecution(filePath, inputPath, timelimit = 5);
+        return res.json({ output });
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
 module.exports = {
     runCode,
     submitCode,
+    customCheck
 }

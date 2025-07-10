@@ -26,6 +26,12 @@ const ProblemPage = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showFullDescription, setShowFullDescription] = useState(false);
+    const [showCustomCheck, setShowCustomCheck] = useState(false);
+    const [customCode, setCustomCode] = useState('');
+    const [customLang, setCustomLang] = useState('cpp');
+    const [customInput, setCustomInput] = useState('');
+    const [customOutput, setCustomOutput] = useState('');
+    const [isCustomRunning, setIsCustomRunning] = useState(false);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -149,6 +155,24 @@ const ProblemPage = () => {
         }
     };
 
+    const handleCustomCheck = async () => {
+        setIsCustomRunning(true);
+        setCustomOutput('');
+        try {
+            const response = await axios.post('/api/code/custom-check', {
+                problemId: problem._id,
+                code: customCode,
+                language: customLang,
+                input: customInput,
+            });
+            setCustomOutput(response.data.output || response.data.error || '');
+            setIsCustomRunning(false);
+        } catch (error) {
+            setCustomOutput(error.response?.data?.error || 'Error running custom code');
+            setIsCustomRunning(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="container mx-auto p-6 flex justify-center items-center min-h-[500px]">
@@ -207,7 +231,7 @@ const ProblemPage = () => {
                     <div className="lg:col-span-6">
                         <div className="bg-gradient-to-br from-slate-700/60 to-slate-900/80 rounded-2xl p-3 md:p-4 shadow-xl border border-slate-700/60 backdrop-blur-xl max-h-[80vh] overflow-y-auto custom-scrollbar">
                             <div className="flex justify-between items-center mb-4">
-                                <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+                                <h1 className="text-3xl text-left font-extrabold text-white flex items-center gap-2">
                                     {problem.title}
                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</span>
                                     {problem.solvedBy?.includes(String(user.id)) && (
@@ -334,6 +358,18 @@ const ProblemPage = () => {
                                             </>
                                         )}
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowCustomCheck(true);
+                                            setCustomLang(language);
+                                            setCustomCode(code);
+                                            setCustomInput('');
+                                            setCustomOutput('');
+                                        }}
+                                        className="px-5 py-2 mb-2 bg-purple-600 text-white rounded-xl font-bold shadow-lg hover:bg-purple-700 transition-all flex items-center gap-2"
+                                    >
+                                        Custom Check
+                                    </button>
                                 </div>
                             </div>
                             <div className="rounded-xl overflow-hidden border border-slate-700">
@@ -390,6 +426,53 @@ const ProblemPage = () => {
                         </div>
                     </div>
                 </div>
+                {showCustomCheck && (
+                    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg w-full max-w-2xl relative">
+                            <button onClick={() => setShowCustomCheck(false)} className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl">&times;</button>
+                            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white">Custom Code Check</h2>
+                            <div className="flex gap-4 mb-4">
+                                <label className="font-semibold text-slate-700 dark:text-slate-200">Language:</label>
+                                <select value={customLang} onChange={e => setCustomLang(e.target.value)} className="rounded-lg px-3 py-1 border dark:bg-slate-800">
+                                    <option value="cpp">C++</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <Editor
+                                    height="250px"
+                                    theme="vs-dark"
+                                    language={customLang === 'cpp' ? 'cpp' : customLang}
+                                    value={customCode}
+                                    onChange={val => setCustomCode(val)}
+                                    options={{ fontSize: 15, minimap: { enabled: false } }}
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="font-semibold text-slate-700 dark:text-slate-200">Custom Input:</label>
+                                <textarea
+                                    className="w-full rounded-lg px-3 py-2 border dark:bg-slate-800 mt-2"
+                                    rows={3}
+                                    value={customInput}
+                                    onChange={e => setCustomInput(e.target.value)}
+                                    placeholder="Enter input for your code here..."
+                                />
+                            </div>
+                            <button
+                                onClick={handleCustomCheck}
+                                className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-semibold"
+                                disabled={isCustomRunning}
+                            >
+                                {isCustomRunning ? 'Running...' : 'Run Custom Code'}
+                            </button>
+                            <div className="mt-4">
+                                <label className="font-semibold text-slate-700 dark:text-slate-200">Output:</label>
+                                <pre className="bg-slate-900 text-white rounded-lg p-3 mt-2 max-h-40 overflow-auto whitespace-pre-wrap">{customOutput}</pre>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <ToastContainer theme="dark" />
             </div>
         </div>

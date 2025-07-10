@@ -48,6 +48,9 @@ const cppExecution = (filepath, inputPath,timelimit) => {
                   }
                   return reject({ error: execError.message, stderr: execStderr });
                 } else {
+                  console.log("===============================================");
+                  console.log("Execution completed successfully", execStdout);
+                  console.log("===============================================");
                   return resolve(execStdout);
                 }
               }

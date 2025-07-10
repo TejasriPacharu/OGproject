@@ -195,7 +195,7 @@ const Dashboard = () => {
                       >
                         {solved.title}
                       </Link>
-                      <p className={`text-sm ${getDifficultyTextColor(solved.difficulty)}`}>
+                      <p className={`text-sm text-left ${getDifficultyTextColor(solved.difficulty)}`}>
                         {solved.difficulty}
                       </p>
                     </div>
