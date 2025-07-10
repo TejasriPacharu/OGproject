@@ -71,33 +71,29 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-      <div className="max-w-md w-full space-y-8 bg-white p-6 sm:p-10 rounded-lg shadow-md">
+    <div className="min-h-screen bg-gradient-to-br from-[#16213E] via-slate-900 to-[#6C63FF] flex items-center justify-center">
+      <div className="max-w-md w-full space-y-8 bg-slate-800/50 p-8 sm:p-12 rounded-3xl shadow-neon border border-purple-500/30 backdrop-blur-xl">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Login</h2>
-          <p className="text-gray-600">
+          <h2 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-[#4ECDC4] to-[#6C63FF] text-transparent bg-clip-text animate-gradient-move">
+            Welcome Back!
+          </h2>
+          <p className="text-slate-300 text-base">
             Sign in to your account to access your dashboard
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center mb-4">
-            <FaExclamationTriangle className="mr-2" />
+          <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-xl flex items-center mb-4 shadow-neon animate-pulse">
+            <FaExclamationTriangle className="mr-2 text-red-400 animate-bounce" />
             <span>{error}</span>
           </div>
         )}
 
-        <form className="space-y-6" onSubmit={onSubmit}>
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email Address
-            </label>
+        <form className="space-y-7" onSubmit={onSubmit} autoComplete="off">
+          <div>   
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaUser className="h-5 w-5 text-gray-400" />
+                <FaUser className="h-5 w-5 text-purple-400" />
               </div>
               <input
                 id="email"
@@ -105,25 +101,20 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={onChange}
-                className={`block w-full pl-10 pr-3 py-2 border ${formErrors.email ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
+                className={`block w-full pl-10 pr-3 py-2 bg-slate-900/60 border ${formErrors.email ? "border-red-500" : "border-purple-500/30"} rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white placeholder:text-slate-400 transition-all duration-200`}
                 placeholder="Email address"
+                autoComplete="username"
               />
             </div>
             {formErrors.email && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+              <p className="mt-1 text-xs text-red-400 animate-pulse">{formErrors.email}</p>
             )}
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-gray-400" />
+                <FaLock className="h-5 w-5 text-pink-400" />
               </div>
               <input
                 id="password"
@@ -131,12 +122,13 @@ const Login = () => {
                 type="password"
                 value={password}
                 onChange={onChange}
-                className={`block w-full pl-10 pr-3 py-2 border ${formErrors.password ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
+                className={`block w-full pl-10 pr-3 py-2 bg-slate-900/60 border ${formErrors.password ? "border-red-500" : "border-pink-500/30"} rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-white placeholder:text-slate-400 transition-all duration-200`}
                 placeholder="Password"
+                autoComplete="current-password"
               />
             </div>
             {formErrors.password && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+              <p className="mt-1 text-xs text-red-400 animate-pulse">{formErrors.password}</p>
             )}
           </div>
 
@@ -144,19 +136,26 @@ const Login = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Logging in..." : "Sign in"}
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                  Logging in...
+                </span>
+              ) : (
+                <span>Sign in 🚀</span>
+              )}
             </button>
           </div>
         </form>
 
         <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
+          <p className="text-sm text-slate-400">
+            Don't have an account?{' '}
             <Link
               to="/register"
-              className="font-medium text-primary-600 hover:text-primary-500"
+              className="font-bold bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text underline underline-offset-4 hover:from-pink-400 hover:to-purple-400 transition-all duration-200"
             >
               Register
             </Link>

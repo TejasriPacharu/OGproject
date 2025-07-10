@@ -1,14 +1,20 @@
-import {useParams, useNavigate} from 'react-router-dom';
-import {useEffect, useState, useContext} from 'react';
-import {AuthContext} from '../../context/AuthContext';
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import axios from 'axios';
 import Editor from '@monaco-editor/react';
-import {FaCheckCircle} from 'react-icons/fa';
+import { FaCheckCircle, FaSadTear } from 'react-icons/fa';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Confetti from 'react-confetti';
 
 const ProblemPage = () => {
-    const {id} = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
-    const {user} = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
+    
+    // State management
     const [problem, setProblem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -16,6 +22,7 @@ const ProblemPage = () => {
     const [language, setLanguage] = useState('cpp');
     const [output, setOutput] = useState('');
     const [status, setStatus] = useState('');
+    const [verdict, setVerdict] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showFullDescription, setShowFullDescription] = useState(false);
@@ -23,7 +30,6 @@ const ProblemPage = () => {
     useEffect(() => {
         const fetchProblem = async () => {
             try {
-                // Make sure your API endpoint is properly configured in your backend
                 const response = await axios.get(`/api/problems/${id}`);
                 setProblem(response.data);
                 
@@ -56,10 +62,22 @@ const ProblemPage = () => {
         setCode(value);
     };
 
+    const showToast = (message, type = 'success') => {
+        toast[type](message, {
+            position: "bottom-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
+    };
+
     const runCode = async () => {
         setIsRunning(true);
         setOutput('');
         setStatus('Running...');
+        setVerdict('');
         
         try {
             const response = await axios.post('/api/code/run', {
@@ -69,13 +87,15 @@ const ProblemPage = () => {
             });
             
             setOutput(response.data.output);
-            setStatus(response.data.status);
+            setStatus('Completed');
             setIsRunning(false);
+            showToast('Code executed successfully!');
         } catch (error) {
             console.error('Error running code:', error);
             setOutput(error.response?.data?.error || 'Error running code');
             setStatus('Error');
             setIsRunning(false);
+            showToast('Error running code', 'error');
         }
     };
 
@@ -83,6 +103,7 @@ const ProblemPage = () => {
         setIsSubmitting(true);
         setOutput('');
         setStatus('Submitting...');
+        setVerdict('');
         
         try {
             const response = await axios.post('/api/code/submit', {
@@ -92,14 +113,39 @@ const ProblemPage = () => {
                 language
             });
             
-            setOutput(response.data.output);
-            setStatus(response.data.status);
+            const { submission } = response.data;
+            setOutput(submission.output);
+            setStatus(submission.status);
+            setVerdict(submission.verdict);
             setIsSubmitting(false);
+
+            if(submission.status === 'solved') {
+                showToast('🎉 Problem solved successfully!');
+            } else if(submission.verdict === 'Wrong Answer') {
+                showToast('Keep trying! Your solution needs some work.', 'warning');
+            } else if(submission.verdict === 'Compilation Error') {
+                showToast('Check your code for compilation errors', 'error');
+            }
         } catch (error) {
             console.error('Error submitting code:', error);
             setOutput(error.response?.data?.error || 'Error submitting solution');
             setStatus('Error');
+            setVerdict('Error');
             setIsSubmitting(false);
+            showToast('Error submitting code', 'error');
+        }
+    };
+
+    const getDifficultyColor = (difficulty) => {
+        switch (difficulty?.toLowerCase()) {
+            case 'easy':
+                return 'px-4 py-1.5 text-sm bg-[#32CD32] bg-opacity-20 text-[#32CD32] rounded-full font-medium border border-[#32CD32] border-opacity-30';
+            case 'medium':
+                return 'px-4 py-1.5 text-sm bg-[#FFD93D] bg-opacity-20 text-[#FFD93D] rounded-full font-medium border border-[#FFD93D] border-opacity-30';
+            case 'hard':
+                return 'px-4 py-1.5 text-sm bg-[#FF6B6B] bg-opacity-20 text-[#FF6B6B] rounded-full font-medium border border-[#FF6B6B] border-opacity-30';
+            default:
+                return 'px-4 py-1.5 text-sm bg-gray-100 bg-opacity-20 text-gray-800 rounded-full font-medium border border-gray-300';
         }
     };
 
@@ -140,214 +186,227 @@ const ProblemPage = () => {
         );
     }
 
-    const getDifficultyColor = (difficulty) => {
-        switch (difficulty) {
-            case 'Easy':
-                return 'bg-green-100 text-green-800 border-green-300';
-            case 'Medium':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-            case 'Hard':
-                return 'bg-red-100 text-red-800 border-red-300';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-300';
-        }
-    };
-
     return (
-        <div className="container mx-auto px-4 py-6">
-            <div className="mb-6">
-                <button 
-                    onClick={() => navigate('/problems')}
-                    className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Problems
-                </button>
-            </div>
+        <div className="min-h-screen bg-[#0F172A] text-white px-1 md:px-4 py-4">
+            <div className="w-full">
+                {/* Top Nav Button */}
+                <div className="mb-6">
+                    <button
+                        onClick={() => navigate('/problems')}
+                        className="flex items-center bg-gradient-to-r from-purple-600 to-blue-500 text-white px-4 py-2 rounded-xl shadow-lg hover:from-purple-700 hover:to-blue-600 transition-all font-semibold"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Problems
+                    </button>
+                </div>
 
-            <div className="grid lg:grid-cols-12 gap-6">
-                {/* Problem Description */}
-                <div className="lg:col-span-5">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-center text-left mb-4">
-                            <h1 className="text-2xl font-bold text-gray-800">{problem.title}</h1>
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(problem.difficulty)}`}>
-                                {problem.difficulty}
-                            </span>
-                            {problem.solvedBy?.includes(String(user.id)) && (
-                                <FaCheckCircle className="text-green-600"/>
+                <div className="grid lg:grid-cols-12 gap-8">
+                    {/* Problem Description */}
+                    <div className="lg:col-span-6">
+                        <div className="bg-gradient-to-br from-slate-700/60 to-slate-900/80 rounded-2xl p-3 md:p-4 shadow-xl border border-slate-700/60 backdrop-blur-xl max-h-[80vh] overflow-y-auto custom-scrollbar">
+                            <div className="flex justify-between items-center mb-4">
+                                <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+                                    {problem.title}
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</span>
+                                    {problem.solvedBy?.includes(String(user.id)) && (
+                                        <FaCheckCircle className="text-green-400 ml-1" />
+                                    )}
+                                </h1>
+                            </div>
+
+                            <div className="mb-4 flex flex-wrap gap-2">
+                                {problem.tags?.map((tag, index) => (
+                                    <span key={index} className="bg-purple-600/20 border border-purple-400/30 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+
+                            <div className="mb-6">
+                                <h3 className="text-left text-lg font-bold mb-2 text-purple-300">Description</h3>
+                                <div className="text-left text-slate-200 whitespace-pre-line leading-relaxed">
+                                    {showFullDescription ? problem.description : (problem.description.slice(0, 300) + (problem.description.length > 300 ? '...' : ''))}
+                                    {problem.description.length > 300 && (
+                                        <button
+                                            onClick={() => setShowFullDescription(!showFullDescription)}
+                                            className="ml-2 text-purple-400 hover:underline font-semibold"
+                                        >
+                                            {showFullDescription ? 'Show Less' : 'Read More'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {problem.constraints && (
+                                <div className="mb-6">
+                                    <h3 className="text-left text-lg font-bold mb-2 text-blue-300">Constraints</h3>
+                                    <div className="text-left bg-slate-800/70 p-4 rounded-lg text-blue-200 whitespace-pre-line font-mono text-sm border border-blue-500/20">
+                                        {problem.constraints}
+                                    </div>
+                                </div>
                             )}
+
+                            <div className="mb-6">
+                                <h3 className="text-left text-lg font-bold mb-2 text-green-300">Examples</h3>
+                                {problem.testCases?.filter(tc => tc.sample).map((testCase, index) => (
+                                    <div key={index} className="mb-4 border border-green-500/20 rounded-xl overflow-hidden bg-gradient-to-br from-green-800/40 to-slate-900/40">
+                                        <div className="px-4 py-2 border-b border-green-500/10 text-green-200 font-semibold">Example {index + 1}</div>
+                                        <div className="p-4">
+                                            <div className="mb-3">
+                                                <span className="text-left font-medium text-green-300 block mb-1">Input:</span>
+                                                <pre className="text-left bg-black/30 p-3 rounded-lg overflow-x-auto text-sm font-mono text-green-100">{testCase.input}</pre>
+                                            </div>
+                                            <div className="mb-3">
+                                                <span className="text-left font-medium text-green-300 block mb-1">Output:</span>
+                                                <pre className="text-left bg-black/30 p-3 rounded-lg overflow-x-auto text-sm font-mono text-green-100">{testCase.output}</pre>
+                                            </div>
+                                            {testCase.explanation && (
+                                                <div>
+                                                    <span className="text-left font-medium text-green-300 block mb-1">Explanation:</span>
+                                                    <div className="text-left text-green-100 text-sm">{testCase.explanation}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        
-                        <div className="mb-4 flex flex-wrap gap-2">
-                            {problem.tags.map((tag, index) => (
-                                <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium">
-                                    {tag}
-                                </span>
-                            ))}
+                    </div>
+
+                    {/* Code Editor & Output */}
+                    <div className="lg:col-span-6 flex flex-col gap-8">
+                        {/* Editor Card */}
+                        <div className="bg-gradient-to-br from-slate-700/60 to-slate-900/80 rounded-2xl p-3 md:p-4 shadow-xl border border-slate-700/60 backdrop-blur-xl max-h-[80vh] overflow-y-auto custom-scrollbar">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div className="flex gap-2 items-center">
+                                    <label htmlFor="language" className="font-semibold text-purple-300">Language:</label>
+                                    <select
+                                        id="language"
+                                        value={language}
+                                        onChange={handleLanguageChange}
+                                        className="bg-slate-800 border border-purple-600/30 rounded-lg px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        <option value="cpp">C++</option>
+                                        <option value="python">Python</option>
+                                        <option value="java">Java</option>
+                                        <option value="javascript">JavaScript</option>
+                                    </select>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={runCode}
+                                        disabled={isRunning || isSubmitting}
+                                        className="px-5 py-2 mb-2 bg-gradient-to-r from-green-500 to-green-400 text-white rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-green-500 transition-all flex items-center gap-2 disabled:opacity-60"
+                                    >
+                                        {isRunning ? (
+                                            <>
+                                                <div className="animate-spin h-4 w-4 border-2 border-green-300 border-t-transparent rounded-full mr-2"></div>
+                                                Running
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Run Code
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={submitCode}
+                                        disabled={isRunning || isSubmitting}
+                                        className="px-5 py-2 mb-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-blue-600 transition-all flex items-center gap-2 disabled:opacity-60"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <div className="animate-spin h-4 w-4 border-2 border-purple-300 border-t-transparent rounded-full mr-2"></div>
+                                                Submitting
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Submit
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="rounded-xl overflow-hidden border border-slate-700">
+                                <Editor
+                                    height="420px"
+                                    theme="vs-dark"
+                                    language={language}
+                                    value={code}
+                                    onChange={handleEditorChange}
+                                    options={{ fontSize: 16, minimap: { enabled: false }, fontFamily: 'Fira Mono, monospace' }}
+                                />
+                            </div>
                         </div>
-                        
-                        <div className="text-left prose max-w-none mb-6">
-                            <h3 className="text-lg font-medium mb-3 text-gray-800">Description</h3>
-                            <div className={`text-gray-700 ${!showFullDescription && 'max-h-[200px] overflow-hidden relative'}`}>
-                                <div className="whitespace-pre-line">{problem.description}</div>
-                                {!showFullDescription && problem.description.length > 300 && (
-                                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
+
+                        {/* Output Card */}
+                        <div className={`relative bg-gradient-to-br from-green-700/30 to-slate-800/40 rounded-2xl p-3 md:p-4 shadow-xl border border-green-700/20 backdrop-blur-xl ${verdict === 'Accepted' || status === 'solved' ? 'ring-4 ring-green-400/30 animate-pulse' : verdict === 'Wrong Answer' || verdict === 'Compilation Error' ? 'ring-4 ring-red-400/30 animate-shake' : ''}`}> 
+                            {/* Confetti for Accepted */}
+                            {(verdict === 'Accepted' || status === 'solved') && (
+                                <Confetti numberOfPieces={150} recycle={false} className="pointer-events-none fixed top-0 left-0 w-full h-full z-50" />
+                            )}
+                            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                <FaCheckCircle className={`text-2xl ${verdict === 'Accepted' || status === 'solved' ? 'text-green-400' : verdict === 'Wrong Answer' ? 'text-red-400' : verdict === 'Compilation Error' ? 'text-yellow-300' : 'text-slate-400'}`} />
+                                Output
+                            </h3>
+                            <div className="flex gap-2 mb-3 items-center">
+                                {verdict && (
+                                    <div className={`text-sm font-bold px-3 py-1 rounded-full border flex items-center gap-2 ${
+                                        verdict === 'Accepted' || status === 'solved'
+                                            ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                                            : verdict === 'Wrong Answer'
+                                            ? 'bg-red-500/20 text-red-300 border-red-400/30 animate-shake'
+                                            : verdict === 'Compilation Error'
+                                            ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/30 animate-shake'
+                                            : 'bg-slate-600/20 text-slate-200 border-slate-400/30'
+                                    }`}>
+                                        {verdict === 'Accepted' || status === 'solved' ? <FaCheckCircle className="text-green-400 animate-bounce" /> : null}
+                                        {verdict === 'Wrong Answer' || verdict === 'Compilation Error' ? <FaSadTear className="text-red-400 animate-bounce" /> : null}
+                                        {verdict}
+                                    </div>
                                 )}
                             </div>
-                            {problem.description.length > 300 && (
-                                <button 
-                                    onClick={() => setShowFullDescription(!showFullDescription)}
-                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2"
-                                >
-                                    {showFullDescription ? 'Show Less' : 'Show More'}
-                                </button>
-                            )}
-                        </div>
-                        
-                        {problem.constraints && (
-                            <div className="text-left mb-6">
-                                <h3 className="text-lg font-medium mb-3 text-gray-800">Constraints</h3>
-                                <div className="bg-gray-50 p-4 rounded-lg text-gray-700 whitespace-pre-line font-mono text-sm">{problem.constraints}</div>
+                            <div className={`bg-black/60 p-4 rounded-lg min-h-[160px] overflow-y-auto font-mono whitespace-pre text-base border ${verdict === 'Accepted' || status === 'solved' ? 'text-green-200 border-green-800/20' : verdict === 'Wrong Answer' || verdict === 'Compilation Error' ? 'text-red-200 border-red-800/20 animate-shake' : 'text-slate-200 border-slate-700/20'}`}>
+                                {verdict === 'Accepted' || status === 'solved' ? (
+                                    <span className="font-extrabold text-green-300 text-xl flex items-center gap-2">
+                                        <FaCheckCircle className="text-green-400 animate-bounce" /> Congratulations! All test cases passed!
+                                    </span>
+                                ) : (verdict === 'Wrong Answer' || verdict === 'Compilation Error') ? (
+                                    <span className="font-extrabold text-red-300 text-xl flex items-center gap-2">
+                                        <FaSadTear className="text-red-400 animate-bounce" /> Oops! Some test cases failed.
+                                    </span>
+                                ) : null}
+                                <div>{output || <span className="text-slate-400">Run your code to see output here</span>}</div>
                             </div>
-                        )}
-                        
-                        <div className="text-left mb-6">
-                            <h3 className="text-lg font-medium mb-3 text-gray-800">Examples</h3>
-                            {problem.testCases?.filter(tc => tc.sample).map((testCase, index) => (
-                                <div key={index} className="mb-4 border border-gray-100 rounded-lg overflow-hidden">
-                                    <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
-                                        <span className="font-medium text-gray-700">Example {index + 1}</span>
-                                    </div>
-                                    <div className="p-4">
-                                        <div className="mb-3">
-                                            <span className="font-medium text-gray-700 block mb-1">Input:</span>
-                                            <pre className="bg-gray-50 p-3 rounded-lg overflow-x-auto text-sm font-mono text-gray-800">{testCase.input}</pre>
-                                        </div>
-                                        <div className="mb-3">
-                                            <span className="font-medium text-gray-700 block mb-1">Output:</span>
-                                            <pre className="bg-gray-50 p-3 rounded-lg overflow-x-auto text-sm font-mono text-gray-800">{testCase.output}</pre>
-                                        </div>
-                                        {testCase.explanation && (
-                                            <div>
-                                                <span className="font-medium text-gray-700 block mb-1">Explanation:</span>
-                                                <div className="text-gray-700 text-sm">{testCase.explanation}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </div>
-                
-                {/* Code Editor */}
-                <div className="lg:col-span-7">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-                        <div className="flex justify-between items-center p-4 border-b border-gray-100">
-                            <div>
-                                <label htmlFor="language" className="mr-2 font-medium text-gray-700">Language:</label>
-                                <select 
-                                    id="language"
-                                    value={language}
-                                    onChange={handleLanguageChange}
-                                    className="border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="javascript">JavaScript</option>
-                                    <option value="python">Python</option>
-                                    <option value="cpp">C++</option>
-                                    <option value="java">Java</option>
-                                </select>
-                            </div>
-                            <div className="flex gap-3">
-                                <button 
-                                    onClick={runCode}
-                                    disabled={isRunning || isSubmitting}
-                                    className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                                >
-                                    {isRunning ? (
-                                        <>
-                                            <div className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full mr-2"></div>
-                                            Running
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Run Code
-                                        </>
-                                    )}
-                                </button>
-                                <button 
-                                    onClick={submitCode}
-                                    disabled={isRunning || isSubmitting}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                                            Submitting
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Submit
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div className="h-[450px] border-b border-gray-100">
-                            <Editor
-                                height="100%"
-                                language={language === 'cpp' ? 'cpp' : language}
-                                value={code}
-                                onChange={handleEditorChange}
-                                theme="vs-dark"
-                                options={{
-                                    minimap: { enabled: false },
-                                    scrollBeyondLastLine: false,
-                                    fontSize: 14,
-                                    tabSize: 2,
-                                    automaticLayout: true,
-                                    lineNumbers: 'on',
-                                    folding: true,
-                                    lineDecorationsWidth: 0,
-                                    lineNumbersMinChars: 3,
-                                    scrollbar: {
-                                        verticalScrollbarSize: 10,
-                                        horizontalScrollbarSize: 10
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
-                    
-                    {/* Output Console */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-medium text-gray-700">Output</h3>
-                            {status && (
-                                <div className={`text-sm font-medium px-3 py-1 rounded-full ${status === 'Accepted' ? 'bg-green-100 text-green-800' : status === 'Error' || status === 'Wrong Answer' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
-                                    {status}
-                                </div>
-                            )}
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-lg h-[150px] overflow-y-auto font-mono whitespace-pre text-sm text-gray-800 border border-gray-100">
-                            {output || <span className="text-gray-400">Run your code to see output here</span>}
-                        </div>
-                    </div>
-                </div>
+                <ToastContainer theme="dark" />
             </div>
         </div>
     );
 };
 
 export default ProblemPage;
+
+/* Add this to your CSS for a shake animation */
+/*
+.animate-shake {
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+*/

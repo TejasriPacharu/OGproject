@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { FaCode, FaCalendarAlt, FaChartLine } from 'react-icons/fa';
+import { FaCode, FaCalendarAlt, FaChartLine, FaFire, FaTrophy, FaRocket } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -20,49 +21,34 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch problems
         const problemsRes = await axios.get('/api/problems');
-        console.log('problemsRes.data =', problemsRes.data); //DEBUG LINE
-
         const problemsToBeSolved = problemsRes.data.problems.filter(
           problem => !(problem.solvedBy || []).includes(String(user.id))
         );
-        
-        console.log('problemsToBeSolved =', problemsToBeSolved); //DEBUG LINE
         
         const solvedProblems = problemsRes.data.problems.filter(
           problem => (problem.solvedBy || []).includes(String(user.id))
         );
         
-        console.log('solvedProblems =', solvedProblems); //DEBUG LINE
-        
-        // Handle different response formats - ensure we always have an array
         if (Array.isArray(problemsToBeSolved)) {
-          setProblems(problemsToBeSolved);
+          setProblems(problemsToBeSolved.slice(0, 4)); // Show only 4 problems
         } else if (problemsToBeSolved && Array.isArray(problemsToBeSolved.problems)) {
-          setProblems(problemsToBeSolved.problems);
-        } else {
-          console.error('Unexpected API response format:', problemsRes.data);
-          setProblems([]);
+          setProblems(problemsToBeSolved.problems.slice(0, 4));
         }
         
         if (Array.isArray(solvedProblems)) {
-          setSolved(solvedProblems);
+          setSolved(solvedProblems.slice(0, 4));
           setUserStats(prev => ({
             ...prev,
             problemsSolved: solvedProblems.length
           }));
         } else if (solvedProblems && Array.isArray(solvedProblems.problems)) {
-          setSolved(solvedProblems.problems);
+          setSolved(solvedProblems.problems.slice(0, 4));
           setUserStats(prev => ({
             ...prev,
             problemsSolved: solvedProblems.length
           }));
-        } else {
-          console.error('Unexpected API response format:', problemsRes.data);
-          setSolved([]);
         }
-        
         setLoading(false);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -75,148 +61,205 @@ const Dashboard = () => {
   }, [user]);
 
   const upcomingContests = [
-    { id: 201, title: 'Weekly Contest 306', date: '2023-07-22 08:00 AM', duration: '90 minutes' },
-    { id: 202, title: 'Biweekly Contest 82', date: '2023-07-29 08:00 AM', duration: '90 minutes' }
+    { 
+      id: 201, 
+      title: 'Weekly Contest 306', 
+      date: '2023-07-22 08:00 AM', 
+      duration: '90 minutes',
+      participants: 1200,
+      difficulty: 'Medium' 
+    },
+    { 
+      id: 202, 
+      title: 'Biweekly Contest 82', 
+      date: '2023-07-29 08:00 AM', 
+      duration: '90 minutes',
+      participants: 800,
+      difficulty: 'Hard' 
+    }
   ];
 
   function getDifficultyColor(difficulty) {
-    if (!difficulty) return "text-gray-400"; // fallback color
-  
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "text-green-500";
-      case "medium":
-        return "text-yellow-500";
-      case "hard":
-        return "text-red-500";
-      default:
-        return "text-gray-400";
-    }
+    const colors = {
+      easy: "from-green-400 to-green-500",
+      medium: "from-yellow-400 to-yellow-500",
+      hard: "from-red-400 to-red-500"
+    };
+    return colors[difficulty?.toLowerCase()] || "from-gray-400 to-gray-500";
   }
-  
+
+  function getDifficultyTextColor(difficulty) {
+    const colors = {
+      easy: "text-green-500",
+      medium: "text-yellow-500",
+      hard: "text-red-500"
+    };
+    return colors[difficulty?.toLowerCase()] || "text-gray-500";
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-[#0F172A]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-50 min-h-screen pt-6 pb-12">
-      <div className="container mx-auto px-4">
-        {/* User Info Card */}
-        <div className="bg-gradient-to-l from-green-300 via-blue-500 to-purple-600 rounded-lg shadow-md text-white p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex justify-between items-center w-full">
+    <div className="min-h-screen bg-[#0F172A] text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Stats Grid */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        >
+          <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-2xl p-6 backdrop-blur-xl border border-purple-500/20">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-lg font-bold opacity-90">Solved</p>
-                <p className="text-6xl font-bold">{userStats.problemsSolved}</p>
+                <p className="text-purple-300 text-sm">Problems Solved</p>
+                <h3 className="text-3xl font-bold mt-1">{userStats.problemsSolved}</h3>
               </div>
-              <div>
-                <p className="text-lg font-bold opacity-90">Contest Rating</p>
-                <p className="text-6xl font-bold">{userStats.contestRating}</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold opacity-90">Global Rank</p>
-                <p className="text-6xl font-bold">{userStats.globalRank}</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold opacity-90">Streak</p>
-                <p className="text-6xl font-bold">{userStats.streak}</p>
-                <p className="font-press text-sm">days</p>
+              <div className="bg-purple-500/20 p-3 rounded-xl">
+                <FaCode className="text-2xl text-purple-400" />
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow-sm p-5">
-            <div className="flex items-center mb-4">
-              <FaChartLine className="text-primary-500 mr-2" />
-              <h2 className="text-lg font-bold">Recent Activity</h2>
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl p-6 backdrop-blur-xl border border-blue-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-300 text-sm">Contest Rating</p>
+                <h3 className="text-3xl font-bold mt-1">{userStats.contestRating}</h3>
+              </div>
+              <div className="bg-blue-500/20 p-3 rounded-xl">
+                <FaTrophy className="text-2xl text-blue-400" />
+              </div>
             </div>
-            <div className="space-y-3">
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl p-6 backdrop-blur-xl border border-green-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-300 text-sm">Global Rank</p>
+                <h3 className="text-3xl font-bold mt-1">#{userStats.globalRank}</h3>
+              </div>
+              <div className="bg-green-500/20 p-3 rounded-xl">
+                <FaRocket className="text-2xl text-green-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl p-6 backdrop-blur-xl border border-orange-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-300 text-sm">Current Streak</p>
+                <h3 className="text-3xl font-bold mt-1">{userStats.streak} days</h3>
+              </div>
+              <div className="bg-orange-500/20 p-3 rounded-xl">
+                <FaFire className="text-2xl text-orange-400" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Activity */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-2 bg-slate-800/50 rounded-2xl p-6 backdrop-blur-xl border border-slate-700"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <FaChartLine className="text-purple-400" />
+                Recent Activity
+              </h2>
+              <Link to="/problems" className="text-purple-400 hover:text-purple-300 text-sm">
+                View All →
+              </Link>
+            </div>
+            <div className="grid gap-4">
               {solved.map(solved => (
-                <div key={solved._id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
-                  <div className="flex justify-between">
+                <motion.div
+                  key={solved._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-slate-700/30 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-300"
+                >
+                  <div className="flex justify-between items-center">
                     <div>
-                      <Link to={`/problems/${solved._id}`} className="font-medium hover:text-primary-600">
+                      <Link 
+                        to={`/problems/${solved._id}`} 
+                        className="font-medium text-lg hover:text-purple-400 transition-colors"
+                      >
                         {solved.title}
                       </Link>
-                      <p className={`text-left text-sm ${getDifficultyColor(solved.difficulty)}`}>{solved.difficulty}</p>
+                      <p className={`text-sm ${getDifficultyTextColor(solved.difficulty)}`}>
+                        {solved.difficulty}
+                      </p>
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex gap-2">
                       {solved.tags.slice(0, 2).map((tag, index) => (
                         <span
-                        key={index}
-                        title={tag}
-                        className="bg-gray-100 text-gray-700 px-2 py-3 rounded text-xs font-medium hover:bg-gray-200 transition"
-                      >
-                        {tag}
-                      </span>
+                          key={index}
+                          className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-300 px-2 py-1 rounded-md text-xs font-medium border border-purple-500/20 backdrop-blur-md"
+                        >
+                          {tag}
+                        </span>
                       ))}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-              {solved.length === 0 && (
-                <p className="text-gray-500">No activity recently</p>
-              )}
             </div>
-            
-          </div>
-
-          {/* Available Problems */}
-          <div className="bg-white rounded-lg shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <FaCode className="text-primary-500 mr-2" />
-                <h2 className="text-lg font-bold">Available Problems</h2>
-              </div>
-              <Link to="/problems" className="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</Link>
-            </div>
-            <div className="space-y-3">
-              {problems.map(problem => (
-                <div key={problem._id} className="w-full transform transition-transform duration-300 hover:scale-105 hover:shadow-md bg-white p-4 rounded-xl border border-gray-200">
-                  <div className="flex justify-between">
-                    <div>
-                      <Link to={`/problems/${problem._id}`} className="font-medium hover:text-primary-600">
-                        {problem.title}
-                      </Link>
-                      <p className={`text-left text-sm ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {problem.tags.slice(0, 2).map((tag, index) => (
-                        <span
-                        key={index}
-                        title={tag}
-                        className="bg-gray-100 text-gray-700 px-2 py-3 rounded text-xs font-medium hover:bg-gray-200 transition"
-                      >
-                        {tag}
-                      </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {problems.length === 0 && (
-                <p className="text-gray-500">No problems available</p>
-              )}
-            </div>
-          </div>
+          </motion.div>
 
           {/* Upcoming Contests */}
-          <div className="bg-white rounded-lg shadow-sm p-5">
-            <div className="flex items-center mb-4">
-              <FaCalendarAlt className="text-primary-500 mr-2" />
-              <h2 className="text-lg font-bold">Upcoming Contests</h2>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-slate-800/50 rounded-2xl p-6 backdrop-blur-xl border border-slate-700"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <FaCalendarAlt className="text-purple-400" />
+                Upcoming Contests
+              </h2>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {upcomingContests.map(contest => (
-                <div key={contest.id} className="border-b pb-2 last:border-0">
-                  <p className="font-medium">{contest.title}</p>
-                  <div className="flex justify-between">
-                    <p className="text-sm text-gray-600">{contest.date}</p>
-                    <p className="text-sm text-gray-600">{contest.duration}</p>
+                <motion.div
+                  key={contest.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-slate-700/30 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-300"
+                >
+                  <h3 className="font-medium text-lg mb-2">{contest.title}</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-slate-800/50 rounded-lg p-2">
+                      <p className="text-slate-400">Date</p>
+                      <p className="font-medium">{contest.date}</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-2">
+                      <p className="text-slate-400">Duration</p>
+                      <p className="font-medium">{contest.duration}</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-2">
+                      <p className="text-slate-400">Difficulty</p>
+                      <p className={`font-medium ${getDifficultyTextColor(contest.difficulty)}`}>
+                        {contest.difficulty}
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-2">
+                      <p className="text-slate-400">Participants</p>
+                      <p className="font-medium">{contest.participants}</p>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

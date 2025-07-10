@@ -16,6 +16,9 @@ module.exports = {
           900: "#002c66",
         },
       },
+      boxShadow: {
+        'neon': '0 0 20px rgba(108, 99, 255, 0.2)',
+      },
       fontFamily: {
         code: ['"Source Code Pro"', "monospace"],
         press: ['"Press Start 2P"', "system-ui"],
