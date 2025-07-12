@@ -55,7 +55,6 @@ const cppExecution = (filepath, inputPath,timelimit) => {
                 }
               }
             );
-  
             // Kill the process if it exceeds the time limit
             setTimeout(() => {
               execCommand.kill();

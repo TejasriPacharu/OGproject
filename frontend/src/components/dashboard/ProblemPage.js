@@ -4,7 +4,7 @@ import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import axios from 'axios';
 import Editor from '@monaco-editor/react';
-import { FaCheckCircle, FaSadTear } from 'react-icons/fa';
+import { FaCheckCircle, FaFileAlt, FaSadTear, FaRobot, FaChartBar, FaCode, FaLightbulb } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Confetti from 'react-confetti';
@@ -32,6 +32,9 @@ const ProblemPage = () => {
     const [customInput, setCustomInput] = useState('');
     const [customOutput, setCustomOutput] = useState('');
     const [isCustomRunning, setIsCustomRunning] = useState(false);
+    const [showAnalysis, setShowAnalysis] = useState(false);
+    const [codeAnalysis, setCodeAnalysis] = useState(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -127,8 +130,12 @@ const ProblemPage = () => {
 
             if(submission.status === 'solved') {
                 showToast('🎉 Problem solved successfully!');
+                // Request AI analysis after successful submission
+                analyzeCode();
             } else if(submission.verdict === 'Wrong Answer') {
                 showToast('Keep trying! Your solution needs some work.', 'warning');
+                // Still offer analysis for wrong answers
+                analyzeCode();
             } else if(submission.verdict === 'Compilation Error') {
                 showToast('Check your code for compilation errors', 'error');
             }
@@ -142,19 +149,54 @@ const ProblemPage = () => {
         }
     };
 
-    const getDifficultyColor = (difficulty) => {
-        switch (difficulty?.toLowerCase()) {
-            case 'easy':
-                return 'px-4 py-1.5 text-sm bg-[#32CD32] bg-opacity-20 text-[#32CD32] rounded-full font-medium border border-[#32CD32] border-opacity-30';
-            case 'medium':
-                return 'px-4 py-1.5 text-sm bg-[#FFD93D] bg-opacity-20 text-[#FFD93D] rounded-full font-medium border border-[#FFD93D] border-opacity-30';
-            case 'hard':
-                return 'px-4 py-1.5 text-sm bg-[#FF6B6B] bg-opacity-20 text-[#FF6B6B] rounded-full font-medium border border-[#FF6B6B] border-opacity-30';
-            default:
-                return 'px-4 py-1.5 text-sm bg-gray-100 bg-opacity-20 text-gray-800 rounded-full font-medium border border-gray-300';
+    const analyzeCode = async () => {
+        // Don't analyze if code is empty
+        if (!code.trim()) {
+            showToast('Cannot analyze empty code', 'warning');
+            return;
+        }
+
+        setIsAnalyzing(true);
+        showToast('🤖 AI is analyzing your code...', 'info');
+        
+        try {
+            const response = await axios.post('/api/code/analyze', {
+                problemId: problem._id,
+                code,
+                language
+            });
+            console.log("=============================================");
+            console.log(response.data);
+            setCodeAnalysis(response.data.analysis);
+            console.log("")
+            setIsAnalyzing(false);
+            setShowAnalysis(true);
+        } catch (error) {
+            console.error('Error analyzing code:', error);
+            setIsAnalyzing(false);
+            showToast('Failed to analyze code', 'error');
         }
     };
 
+    // Function to render the code quality score with color
+    const renderQualityScore = (score) => {
+        let colorClass = 'text-yellow-400';
+        
+        if (score >= 8) {
+            colorClass = 'text-green-400';
+        } else if (score <= 4) {
+            colorClass = 'text-red-400';
+        }
+        
+        return (
+            <div className="flex items-center">
+                <span className={`text-4xl font-bold ${colorClass}`}>{score}</span>
+                <span className="text-sm text-slate-400 ml-2">/10</span>
+            </div>
+        );
+    };
+
+    // Add back the missing handleCustomCheck function
     const handleCustomCheck = async () => {
         setIsCustomRunning(true);
         setCustomOutput('');
@@ -370,6 +412,23 @@ const ProblemPage = () => {
                                     >
                                         Custom Check
                                     </button>
+                                    <button
+                                        onClick={analyzeCode}
+                                        disabled={isAnalyzing || !code.trim()}
+                                        className="px-5 py-2 mb-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all flex items-center gap-2 disabled:opacity-60"
+                                    >
+                                        {isAnalyzing ? (
+                                            <>
+                                                <div className="animate-spin h-4 w-4 border-2 border-blue-300 border-t-transparent rounded-full mr-2"></div>
+                                                Analyzing
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaRobot className="mr-1" />
+                                                Analyze Code
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                             <div className="rounded-xl overflow-hidden border border-slate-700">
@@ -426,6 +485,7 @@ const ProblemPage = () => {
                         </div>
                     </div>
                 </div>
+                
                 {showCustomCheck && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg w-full max-w-2xl relative">
@@ -473,23 +533,178 @@ const ProblemPage = () => {
                         </div>
                     </div>
                 )}
+
+                {/* AI Code Analysis Modal */}
+                {showAnalysis && codeAnalysis && (
+                    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-blue-500/30 p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center">
+                                    <FaRobot className="text-blue-400 mr-2" /> AI Code Analysis
+                                </h2>
+                                <button 
+                                    onClick={() => setShowAnalysis(false)} 
+                                    className="text-slate-400 hover:text-white"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                {/* Code Quality Score */}
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <FaChartBar className="text-blue-400" />
+                                        <h3 className="font-semibold text-blue-300">Code Quality</h3>
+                                    </div>
+                                    <div className="flex justify-center items-center flex-1">
+                                        {codeAnalysis.codeQualityAssessment && renderQualityScore(parseInt(codeAnalysis.codeQualityAssessment.score || 0))}
+                                    </div>
+                                    <p className="text-sm text-slate-300 mt-2">{codeAnalysis.codeQualityAssessment?.justification || "Assessment not available"}</p>
+                                </div>
+
+                                {/* Time Complexity */}
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <h3 className="font-semibold text-green-300">Time Complexity</h3>
+                                    </div>
+                                    <div className="mt-2 font-mono">
+                                        {codeAnalysis.complexity?.timeComplexity || "Not determined"}
+                                    </div>
+                                    <p className="text-sm text-slate-300 mt-2">{codeAnalysis.complexity?.timeComplexity?.explanation || ""}</p>
+                                </div>
+
+                                {/* Space Complexity */}
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                        <h3 className="font-semibold text-purple-300">Space Complexity</h3>
+                                    </div>
+                                    <div className="mt-2 font-mono">
+                                        {codeAnalysis.complexity?.spaceComplexity || "Not determined"}
+                                    </div>
+                                    <p className="text-sm text-slate-300 mt-2">{codeAnalysis.complexity?.spaceExplanation || ""}</p>
+                                </div>
+                            </div>
+
+                            {/* Coding Style Feedback */}
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
+                            <div className="flex items-center gap-2 mb-2">
+                                <FaFileAlt className="text-blue-400" />
+                                <h3 className="font-semibold text-blue-300">Analysis</h3>
+                            </div>
+                            <p className="text-slate-300">{codeAnalysis.suggestions?.analysis || "Analysis not available"}</p>
+                            </div>  
+
+                            {/* Logic Optimization */}
+                            // Create a section for displaying optimization suggestions:
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <FaLightbulb className="text-amber-400" />
+                                <h3 className="font-semibold text-amber-300">Optimization Suggestions</h3>
+                            </div>
+                            <ul className="list-disc pl-5 space-y-2">
+                                {codeAnalysis.suggestions?.suggestions && 
+                                Array.isArray(codeAnalysis.suggestions.suggestions) ? (
+                                codeAnalysis.suggestions.suggestions.map((suggestion, idx) => (
+                                    <li key={idx} className="text-slate-300">{suggestion}</li>
+                                ))
+                                ) : (
+                                <li className="text-slate-400">No optimization suggestions available</li>
+                                )}
+                            </ul>
+                            </div>
+
+                            {/* Best Practices */}
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h3 className="font-semibold text-cyan-300">Best Practices Recommendations</h3>
+                                </div>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    {codeAnalysis.bestPracticesRecommendations ? (
+                                        Array.isArray(codeAnalysis.bestPracticesRecommendations.recommendations) ? 
+                                            codeAnalysis.bestPracticesRecommendations.recommendations.map((rec, idx) => (
+                                                <li key={idx} className="text-slate-300">{rec}</li>
+                                            ))
+                                        : <li className="text-slate-300">{codeAnalysis.bestPracticesRecommendations}</li>
+                                    ) : (
+                                        <li className="text-slate-400">No best practices recommendations available</li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            {/* Overall Assessment */}
+                            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/30 rounded-xl p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h3 className="font-semibold text-blue-300">Overall Assessment</h3>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 className="font-medium text-green-300 mb-2">Strengths:</h4>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            {codeAnalysis.overallStrengthsAndAreas?.strengths ? (
+                                                Array.isArray(codeAnalysis.overallStrengthsAndAreas.strengths) ? 
+                                                    codeAnalysis.overallStrengthsAndAreas.strengths.map((strength, idx) => (
+                                                        <li key={idx} className="text-slate-300">{strength}</li>
+                                                    ))
+                                                : <li className="text-slate-300">{codeAnalysis.overallStrengthsAndAreas.strengths}</li>
+                                            ) : (
+                                                <li className="text-slate-400">No strengths highlighted</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                    
+                                    <div>
+                                        <h4 className="font-medium text-amber-300 mb-2">Areas for Improvement:</h4>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            {codeAnalysis.overallStrengthsAndAreas?.areasForImprovement ? (
+                                                Array.isArray(codeAnalysis.overallStrengthsAndAreas.areasForImprovement) ? 
+                                                    codeAnalysis.overallStrengthsAndAreas.areasForImprovement.map((area, idx) => (
+                                                        <li key={idx} className="text-slate-300">{area}</li>
+                                                    ))
+                                                : <li className="text-slate-300">{codeAnalysis.overallStrengthsAndAreas.areasForImprovement}</li>
+                                            ) : (
+                                                <li className="text-slate-400">No improvement areas highlighted</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <ToastContainer theme="dark" />
             </div>
         </div>
     );
 };
 
-export default ProblemPage;
+const getDifficultyColor = (difficulty) => {
+    switch (difficulty?.toLowerCase()) {
+        case 'easy':
+            return 'px-4 py-1.5 text-sm bg-[#32CD32] bg-opacity-20 text-[#32CD32] rounded-full font-medium border border-[#32CD32] border-opacity-30';
+        case 'medium':
+            return 'px-4 py-1.5 text-sm bg-[#FFD93D] bg-opacity-20 text-[#FFD93D] rounded-full font-medium border border-[#FFD93D] border-opacity-30';
+        case 'hard':
+            return 'px-4 py-1.5 text-sm bg-[#FF6B6B] bg-opacity-20 text-[#FF6B6B] rounded-full font-medium border border-[#FF6B6B] border-opacity-30';
+        default:
+            return 'px-4 py-1.5 text-sm bg-gray-100 bg-opacity-20 text-gray-800 rounded-full font-medium border border-gray-300';
+    }
+};
 
-/* Add this to your CSS for a shake animation */
-/*
-.animate-shake {
-  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-}
-@keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
-}
-*/
+export default ProblemPage;

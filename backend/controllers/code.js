@@ -1,6 +1,7 @@
 const { cppExecution, cppTestCases } = require("../services/cpp.js");
 const { generateFile} = require("../services/generateFile");
 const { generateInputFile } = require("../services/generateInputFile");
+const { analyzeCode } = require("../services/ai");
 const Problem = require("../models/Problem");
 const Submission = require("../models/Submission");
 const path = require("path");
@@ -63,7 +64,8 @@ const submitCode = async (req, res) => {
             const outputPath = testcases[i].output;
 
             if (language === "cpp") {
-                output = await cppTestCases(filePath, inputPath, outputPath, problemData.timelimit);
+                const timeLimit = problemData.timelimit || 5; 
+                output = await cppTestCases(filePath, inputPath, outputPath, timeLimit);
                 status = "attempted";
             }
             console.log("OUTPUT: ",output);
@@ -123,11 +125,6 @@ const submitCode = async (req, res) => {
 
 const customCheck = async (req, res) => {
     let {problemId,language, code, input} = req.body;
-    console.log("customCheck called with problemId:", problemId);
-    console.log("customCheck called with language:", language);
-    console.log("customCheck called with code:", code);
-    console.log("customCheck called with input:", input);
-
     try {
         const problemData = await Problem.findById(problemId);
         const codeStubs = problemData.codeStubs;
@@ -140,8 +137,47 @@ const customCheck = async (req, res) => {
     }
 };
 
+const analyzeCodeWithAI = async (req, res) => {
+    let { language, code, problemId } = req.body;
+
+    if (code === "") {
+        return res.status(400).json({ message: "Code body cannot be empty!" });
+    }
+
+    try {
+        // Get the problem description to provide context to Gemini
+        const problemData = await Problem.findById(problemId);
+        
+        if (!problemData) {
+            return res.status(404).json({ message: "Problem not found" });
+        }
+
+        // Use the Gemini API to analyze the code
+        const analysis = await analyzeCode(
+            code, 
+            language, 
+            problemData.description
+        );
+        console.log("=====================================");
+        console.log("ANALYSIS: ",analysis);
+        console.log("=====================================");
+
+        return res.status(200).json({ 
+            message: "Code analysis completed", 
+            analysis 
+        });
+    } catch (error) {
+        console.error("Error during code analysis:", error);
+        return res.status(500).json({ 
+            message: "Failed to analyze code", 
+            error: error.message 
+        });
+    }
+};
+
 module.exports = {
     runCode,
     submitCode,
-    customCheck
+    customCheck,
+    analyzeCodeWithAI
 }
