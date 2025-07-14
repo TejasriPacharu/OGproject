@@ -111,6 +111,7 @@ Please provide:
 
 Format your response as JSON with the following structure:
 {
+  "codeQuality": <integer from 1 to 10>,
   "analysis": "...",
   "suggestions": ["..."],
   "optimizedCode": "...",

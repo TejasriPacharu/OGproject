@@ -536,15 +536,15 @@ const ProblemPage = () => {
 
                 {/* AI Code Analysis Modal */}
                 {showAnalysis && codeAnalysis && (
-                    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-blue-500/30 p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 overflow-y-auto backdrop-blur-sm">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl shadow-2xl border border-blue-500/30 p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-fadeIn">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center">
+                                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent flex items-center">
                                     <FaRobot className="text-blue-400 mr-2" /> AI Code Analysis
                                 </h2>
                                 <button 
                                     onClick={() => setShowAnalysis(false)} 
-                                    className="text-slate-400 hover:text-white"
+                                    className="text-slate-400 hover:text-white transition-colors duration-200"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -554,7 +554,7 @@ const ProblemPage = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                                 {/* Code Quality Score */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between">
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
                                     <div className="flex items-center gap-2 mb-2">
                                         <FaChartBar className="text-blue-400" />
                                         <h3 className="font-semibold text-blue-300">Code Quality</h3>
@@ -566,28 +566,28 @@ const ProblemPage = () => {
                                 </div>
 
                                 {/* Time Complexity */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-green-500/40 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300">
                                     <div className="flex items-center gap-2 mb-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <h3 className="font-semibold text-green-300">Time Complexity</h3>
                                     </div>
-                                    <div className="mt-2 font-mono">
+                                    <div className="mt-2 font-mono bg-black/30 p-2 rounded text-green-200">
                                         {codeAnalysis.complexity?.timeComplexity || "Not determined"}
                                     </div>
                                     <p className="text-sm text-slate-300 mt-2">{codeAnalysis.complexity?.timeComplexity?.explanation || ""}</p>
                                 </div>
 
                                 {/* Space Complexity */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-purple-500/40 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300">
                                     <div className="flex items-center gap-2 mb-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                         </svg>
                                         <h3 className="font-semibold text-purple-300">Space Complexity</h3>
                                     </div>
-                                    <div className="mt-2 font-mono">
+                                    <div className="mt-2 font-mono bg-black/30 p-2 rounded text-purple-200">
                                         {codeAnalysis.complexity?.spaceComplexity || "Not determined"}
                                     </div>
                                     <p className="text-sm text-slate-300 mt-2">{codeAnalysis.complexity?.spaceExplanation || ""}</p>
@@ -595,56 +595,87 @@ const ProblemPage = () => {
                             </div>
 
                             {/* Coding Style Feedback */}
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
-                            <div className="flex items-center gap-2 mb-2">
-                                <FaFileAlt className="text-blue-400" />
-                                <h3 className="font-semibold text-blue-300">Analysis</h3>
-                            </div>
-                            <p className="text-slate-300">{codeAnalysis.suggestions?.analysis || "Analysis not available"}</p>
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <FaFileAlt className="text-blue-400" />
+                                    <h3 className="font-semibold text-blue-300">Analysis</h3>
+                                </div>
+                                <p className="text-slate-300 text-left">{codeAnalysis.suggestions?.analysis || "Analysis not available"}</p>
                             </div>  
 
                             {/* Logic Optimization */}
-                            // Create a section for displaying optimization suggestions:
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <FaLightbulb className="text-amber-400" />
-                                <h3 className="font-semibold text-amber-300">Optimization Suggestions</h3>
-                            </div>
-                            <ul className="list-disc pl-5 space-y-2">
-                                {codeAnalysis.suggestions?.suggestions && 
-                                Array.isArray(codeAnalysis.suggestions.suggestions) ? (
-                                codeAnalysis.suggestions.suggestions.map((suggestion, idx) => (
-                                    <li key={idx} className="text-slate-300">{suggestion}</li>
-                                ))
-                                ) : (
-                                <li className="text-slate-400">No optimization suggestions available</li>
-                                )}
-                            </ul>
-                            </div>
-
-                            {/* Best Practices */}
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <h3 className="font-semibold text-cyan-300">Best Practices Recommendations</h3>
+                                    <FaLightbulb className="text-amber-400" />
+                                    <h3 className="font-semibold text-amber-300">Optimization Suggestions</h3>
                                 </div>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    {codeAnalysis.bestPracticesRecommendations ? (
-                                        Array.isArray(codeAnalysis.bestPracticesRecommendations.recommendations) ? 
-                                            codeAnalysis.bestPracticesRecommendations.recommendations.map((rec, idx) => (
-                                                <li key={idx} className="text-slate-300">{rec}</li>
-                                            ))
-                                        : <li className="text-slate-300">{codeAnalysis.bestPracticesRecommendations}</li>
+                                <ul className="list-disc pl-5 space-y-2 text-left">
+                                    {codeAnalysis.suggestions?.suggestions && 
+                                    Array.isArray(codeAnalysis.suggestions.suggestions) ? (
+                                    codeAnalysis.suggestions.suggestions.map((suggestion, idx) => (
+                                        <li key={idx} className="text-slate-300">{suggestion}</li>
+                                    ))
                                     ) : (
-                                        <li className="text-slate-400">No best practices recommendations available</li>
+                                    <li className="text-slate-400">No optimization suggestions available</li>
                                     )}
                                 </ul>
                             </div>
 
+                            {/* Optimized Code with Editor */}
+                            <div className="bg-gradient-to-r from-slate-800/70 to-slate-900/70 border border-teal-700/30 rounded-xl p-5 mb-6 hover:border-teal-500/40 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <FaCode className="text-teal-400" />
+                                        <h3 className="font-semibold text-teal-300">Optimized Code</h3>
+                                    </div>
+                                    <div className="px-3 py-1 text-xs bg-teal-900/50 text-teal-300 rounded-full border border-teal-700/50">
+                                        Recommended Implementation
+                                    </div>
+                                </div>
+                                
+                                {codeAnalysis.suggestions?.optimizedCode ? (
+                                    Array.isArray(codeAnalysis.suggestions.optimizedCode) ? (
+                                        <div className="bg-gray-900/70 rounded-lg border border-slate-700 overflow-hidden">
+                                            <Editor
+                                                height="250px"
+                                                theme="vs-dark"
+                                                language={language}
+                                                value={codeAnalysis.suggestions.optimizedCode.join('\n')}
+                                                options={{ 
+                                                    fontSize: 14, 
+                                                    readOnly: true, 
+                                                    minimap: { enabled: false },
+                                                    fontFamily: 'Fira Mono, monospace',
+                                                    scrollBeyondLastLine: false
+                                                }}
+                                            />
+                                        </div>
+                                    ) : typeof codeAnalysis.suggestions.optimizedCode === 'string' ? (
+                                        <div className="bg-gray-900/70 rounded-lg border border-slate-700 overflow-hidden">
+                                            <Editor
+                                                height="250px"
+                                                theme="vs-dark"
+                                                language={language}
+                                                value={codeAnalysis.suggestions.optimizedCode}
+                                                options={{ 
+                                                    fontSize: 14, 
+                                                    readOnly: true, 
+                                                    minimap: { enabled: false },
+                                                    fontFamily: 'Fira Mono, monospace',
+                                                    scrollBeyondLastLine: false
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-400 text-center p-4 bg-black/20 rounded-lg">Optimized code format not recognized</p>
+                                    )
+                                ) : (
+                                    <p className="text-slate-400 text-center p-4 bg-black/20 rounded-lg">No optimized code available</p>
+                                )}
+                            </div>
+
                             {/* Overall Assessment */}
-                            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/30 rounded-xl p-5">
+                            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/30 rounded-xl p-5 hover:border-blue-600/40 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
                                 <div className="flex items-center gap-2 mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -654,29 +685,14 @@ const ProblemPage = () => {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <h4 className="font-medium text-green-300 mb-2">Strengths:</h4>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            {codeAnalysis.overallStrengthsAndAreas?.strengths ? (
-                                                Array.isArray(codeAnalysis.overallStrengthsAndAreas.strengths) ? 
-                                                    codeAnalysis.overallStrengthsAndAreas.strengths.map((strength, idx) => (
-                                                        <li key={idx} className="text-slate-300">{strength}</li>
-                                                    ))
-                                                : <li className="text-slate-300">{codeAnalysis.overallStrengthsAndAreas.strengths}</li>
-                                            ) : (
-                                                <li className="text-slate-400">No strengths highlighted</li>
-                                            )}
-                                        </ul>
-                                    </div>
-                                    
-                                    <div>
                                         <h4 className="font-medium text-amber-300 mb-2">Areas for Improvement:</h4>
                                         <ul className="list-disc pl-5 space-y-1">
-                                            {codeAnalysis.overallStrengthsAndAreas?.areasForImprovement ? (
-                                                Array.isArray(codeAnalysis.overallStrengthsAndAreas.areasForImprovement) ? 
-                                                    codeAnalysis.overallStrengthsAndAreas.areasForImprovement.map((area, idx) => (
+                                            {codeAnalysis.suggestions?.improvements ? (
+                                                Array.isArray(codeAnalysis.suggestions.improvements) ? 
+                                                    codeAnalysis.suggestions.improvements.map((area, idx) => (
                                                         <li key={idx} className="text-slate-300">{area}</li>
                                                     ))
-                                                : <li className="text-slate-300">{codeAnalysis.overallStrengthsAndAreas.areasForImprovement}</li>
+                                                : <li className="text-slate-300">{codeAnalysis.suggestions.improvements}</li>
                                             ) : (
                                                 <li className="text-slate-400">No improvement areas highlighted</li>
                                             )}
