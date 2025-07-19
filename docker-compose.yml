@@ -21,7 +21,7 @@ services:
         dockerfile: Dockerfile
       container_name: og-code-frontend
       ports:
-        - "8069:80"
+        - "8069:3000"
       depends_on:
         - backend
       restart: unless-stopped
