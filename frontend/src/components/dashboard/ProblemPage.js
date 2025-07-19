@@ -8,6 +8,7 @@ import { FaCheckCircle, FaFileAlt, FaSadTear, FaRobot, FaChartBar, FaCode, FaLig
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Confetti from 'react-confetti';
+import { BACKEND_URI } from '../../config';
 
 const ProblemPage = () => {
     const { id } = useParams();
@@ -39,7 +40,7 @@ const ProblemPage = () => {
     useEffect(() => {
         const fetchProblem = async () => {
             try {
-                const response = await axios.get(`${process.env.BACKEND_URI}/api/problems/${id}`);
+                const response = await axios.get(`${BACKEND_URI}/api/problems/${id}`);
                 setProblem(response.data);
                 
                 // Set initial code stub based on selected language
@@ -89,7 +90,7 @@ const ProblemPage = () => {
         setVerdict('');
         
         try {
-            const response = await axios.post(`${process.env.BACKEND_URI}/api/code/run`, {
+            const response = await axios.post(`${BACKEND_URI}/api/code/run`, {
                 problemId: problem._id,
                 code,
                 language
@@ -115,7 +116,7 @@ const ProblemPage = () => {
         setVerdict('');
         
         try {
-            const response = await axios.post(`${process.env.BACKEND_URI}/api/code/submit`, {
+            const response = await axios.post(`${BACKEND_URI}/api/code/submit`, {
                 problemId: problem._id,
                 userId: user.id,
                 code,
@@ -160,7 +161,7 @@ const ProblemPage = () => {
         showToast('🤖 AI is analyzing your code...', 'info');
         
         try {
-            const response = await axios.post(`${process.env.BACKEND_URI}/api/code/analyze`, {
+            const response = await axios.post(`${BACKEND_URI}/api/code/analyze`, {
                 problemId: problem._id,
                 code,
                 language
@@ -201,7 +202,7 @@ const ProblemPage = () => {
         setIsCustomRunning(true);
         setCustomOutput('');
         try {
-            const response = await axios.post(`${process.env.BACKEND_URI}/api/code/custom-check`, {
+            const response = await axios.post(`${BACKEND_URI}/api/code/custom-check`, {
                 problemId: problem._id,
                 code: customCode,
                 language: customLang,

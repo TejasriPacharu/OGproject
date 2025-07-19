@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { BACKEND_URI } from "../config";
 import axios from "axios";
 
 export const AuthContext = createContext();
@@ -26,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post(`${process.env.BACKEND_URI}/api/auth/register`, {
+      const res = await axios.post(`${BACKEND_URI}/api/auth/register`, {
         name,
         email,
         password,
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post(`${process.env.BACKEND_URI}/api/auth/login`, {
+      const res = await axios.post(`${BACKEND_URI}/api/auth/login`, {
         email,
         password,
       });
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
       setAuthToken(token);
       try {
         setLoading(true);
-        const res = await axios.get(`${process.env.BACKEND_URI}/api/auth/me`);
+        const res = await axios.get(`${BACKEND_URI}/api/auth/me`);
         setUser(res.data.user);
         setIsAuthenticated(true);
         setLoading(false);

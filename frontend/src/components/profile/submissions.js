@@ -4,6 +4,7 @@ import monthDaysByYear from "month-days-by-year";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { BACKEND_URI } from "../../config";
 
 const Submissions = ({ user }) => {
   const targetId = user?.id;
@@ -13,13 +14,12 @@ const Submissions = ({ user }) => {
     new Date(year, i, 1).toLocaleDateString(undefined, { month: "short" })
   );
   const [submissions, setSubmissions] = useState([]);
-  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     if (!targetId) return;
     const getUserSubmissions = async () => {
       try {
-        const { data } = await axios.get(`${process.env.BACKEND_URI}/api/submissions/user/${targetId}`, {
+        const { data } = await axios.get(`${BACKEND_URI}/api/submissions/user/${targetId}`, {
           withCredentials: true,
         });
         setSubmissions(data.submissions || []);

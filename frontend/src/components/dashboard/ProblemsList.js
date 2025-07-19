@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { FaCheckCircle } from 'react-icons/fa';
 import { FaRegCircle } from 'react-icons/fa';
-
+import { BACKEND_URI } from '../../config';
 
 const ProblemsList = () => {
   const { user } = useContext(AuthContext);
@@ -18,7 +18,7 @@ const ProblemsList = () => {
   useEffect(() => {
     const fetchProblems = async () => {
       try {
-        const response = await axios.get(`${process.env.BACKEND_URI}/api/problems`);
+        const response = await axios.get(`${BACKEND_URI}/api/problems`);
         // Handle different response formats - ensure we always have an array
 
         const solvedProblems = response.data.problems.filter(

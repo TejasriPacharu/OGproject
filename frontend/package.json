@@ -10,7 +10,6 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.2",
-    "dotenv": "^17.2.0",
     "framer-motion": "^12.23.3",
     "month-days-by-year": "^1.0.1",
     "react": "^19.1.0",
@@ -23,9 +22,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -47,9 +46,7 @@
     ]
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.16",
-    "path-browserify": "^1.0.1",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5"
   }

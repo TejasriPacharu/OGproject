@@ -17,7 +17,6 @@ import ProblemPage from './components/dashboard/ProblemPage';
 import ProblemsList from './components/dashboard/ProblemsList';
 import PrivateRoute from './components/routing/PrivateRoute';
 import Profile from './components/dashboard/Profile';
-require('dotenv').config();
 
 const App = () => {
   return (

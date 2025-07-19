@@ -4,6 +4,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import Submissions from '../profile/submissions';
 import axios from 'axios';
+import { BACKEND_URI } from '../../config';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
@@ -41,7 +42,7 @@ const Profile = () => {
             'Authorization': `Bearer ${token}`
           }
         };
-        const response = await axios.get(`${process.env.BACKEND_URI}/api/auth/me`, config);
+        const response = await axios.get(`${BACKEND_URI}/api/auth/me`, config);
         setProfile(response.data.user);
         setLoading(false);
       } catch (error) {

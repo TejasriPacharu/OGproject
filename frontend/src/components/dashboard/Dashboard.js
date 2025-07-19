@@ -4,6 +4,7 @@ import { FaCode, FaCalendarAlt, FaChartLine, FaFire, FaTrophy, FaRocket } from '
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { BACKEND_URI } from '../../config';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -21,7 +22,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const problemsRes = await axios.get(`${process.env.BACKEND_URI}/api/problems`);
+        const problemsRes = await axios.get(`${BACKEND_URI}/api/problems`);
         const problemsToBeSolved = problemsRes.data.problems.filter(
           problem => !(problem.solvedBy || []).includes(String(user.id))
         );
