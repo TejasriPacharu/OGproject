@@ -8,6 +8,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Install CRACO and path-browserify
+RUN npm install @craco/craco path-browserify --save-dev
+
 # Copy source files
 COPY . .
 
