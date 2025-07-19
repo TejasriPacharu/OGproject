@@ -1,69 +1,27 @@
-version: '3.8'
-
 services:
-  # MongoDB Service
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    restart: always
-    volumes:
-      - mongodb_data:/data/db
-    ports:
-      - "27017:27017"
-    networks:
-      - app-network
-    environment:
-      - MONGO_INITDB_DATABASE=ojproject
+    backend:
+      build: 
+        context: ./backend
+        dockerfile: Dockerfile
+      container_name: og-code-backend
+      env_file:
+        - ./backend/.env
+      ports:
+        - "5069:5001"
+      environment:
+        - NODE_ENV=production
+        # MongoDB Atlas connection string
+        - MONGO_URI=${MONGO_URI}
 
-  # Backend Service
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend
-    restart: always
-    depends_on:
-      - mongodb
-    environment:
-      - NODE_ENV=production
-      - PORT=5001
-      - MONGO_URI=mongodb://mongodb:27017/ojproject
-    volumes:
-      # Persistent volumes for temp directories to ensure file cleanup works properly
-      - backend_codes:/usr/src/backend/services/codes
-      - backend_inputs:/usr/src/backend/services/inputs
-      - backend_outputs:/usr/src/backend/services/outputs
-    ports:
-      - "5001:5001"
-    networks:
-      - app-network
+      restart: unless-stopped 
 
-  # Frontend Service
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend
-    restart: always
-    depends_on:
-      - backend
-    ports:
-      - "80:80"
-    networks:
-      - app-network
-
-# Networks
-networks:
-  app-network:
-    driver: bridge
-
-# Volumes
-volumes:
-  mongodb_data:
-    driver: local
-  backend_codes:
-    driver: local
-  backend_inputs:
-    driver: local
-  backend_outputs:
-    driver: local
+    frontend:
+      build:
+        context: ./frontend
+        dockerfile: Dockerfile
+      container_name: og-code-frontend
+      ports:
+        - "8069:80"
+      depends_on:
+        - backend
+      restart: unless-stopped

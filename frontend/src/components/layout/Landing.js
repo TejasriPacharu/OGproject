@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaCode, FaUsers, FaChartLine, FaTrophy, FaArrowRight, FaFire, FaRocket } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const EmojiSpan = ({ children }) => (
   <span className="animate-bounce inline-block">{children}</span>

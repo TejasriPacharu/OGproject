@@ -5,6 +5,7 @@ import './App.css';
 
 // Auth Provider
 import { AuthProvider } from './context/AuthContext';
+// Theme Provider
 
 // Components
 import MainNavbar from './components/layout/Navbar';
@@ -19,26 +20,26 @@ import Profile from './components/dashboard/Profile';
 
 const App = () => {
   return (
-    <NextUIProvider>
-      <AuthProvider>
-      <Router>
-        <div className="App">
-          <MainNavbar />
-          <main>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-              <Route path="/problems" element={<PrivateRoute><ProblemsList /></PrivateRoute>} />
-              <Route path="/problems/:id" element={<PrivateRoute><ProblemPage /></PrivateRoute>} />
-              <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-            </Routes>
-          </main>
-        </div>
-      </Router>
-    </AuthProvider>
-    </NextUIProvider>
+      <NextUIProvider>
+        <AuthProvider>
+        <Router>
+          <div className="App">
+            <MainNavbar />
+            <main>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                <Route path="/problems" element={<PrivateRoute><ProblemsList /></PrivateRoute>} />
+                <Route path="/problems/:id" element={<PrivateRoute><ProblemPage /></PrivateRoute>} />
+                <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+              </Routes>
+            </main>
+          </div>
+        </Router>
+      </AuthProvider>
+      </NextUIProvider>
     
   );
 };

@@ -1,6 +1,6 @@
 FROM node:18-alpine AS build
 
-WORKDIR /usr/src/frontend
+WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
@@ -18,7 +18,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy built files from build stage
-COPY --from=build /usr/src/frontend/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html
 
 # Configure nginx to handle client-side routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf

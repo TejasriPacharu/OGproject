@@ -5,9 +5,6 @@ import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { FaCheckCircle } from 'react-icons/fa';
 import { FaRegCircle } from 'react-icons/fa';
-import { FaBolt } from 'react-icons/fa';
-import { FaFire } from 'react-icons/fa';
-import { FaCrown } from 'react-icons/fa';
 
 
 const ProblemsList = () => {

@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { FaUser } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 // Imports
-import { RiCodeLine, RiTrophyLine, RiGamepadLine, RiBarChart2Line } from 'react-icons/ri';
+import { RiCodeLine, RiTrophyLine, RiGamepadLine, RiBarChart2Line} from 'react-icons/ri';
 
 
 
@@ -21,7 +21,7 @@ const MainNavbar = () => {
   const NavLink = ({ to, children, icon: Icon }) => (
     <Link 
       to={to} 
-      className="group relative flex items-center gap-2 font-medium text-white/90 hover:text-white transition-colors"
+      className="group relative flex items-center gap-2 font-medium text-white/90 dark:text-white/90 hover:text-white dark:hover:text-white transition-colors"
     >
       {Icon && <Icon className="text-xl text-purple-400 group-hover:text-purple-300" />}
       {children}
@@ -29,6 +29,7 @@ const MainNavbar = () => {
     </Link>
   );
 
+  
   const authLinks = (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -43,7 +44,7 @@ const MainNavbar = () => {
             className="relative group"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur group-hover:blur-md transition-all duration-300" />
-            <div className="relative bg-slate-900 rounded-full p-3 border border-purple-500/30">
+            <div className="relative bg-slate-900 dark:bg-slate-900 rounded-full p-3 border border-purple-500/30">
               <FaUser className="text-purple-400 text-xl" />
             </div>
           </motion.div>
@@ -90,7 +91,7 @@ const MainNavbar = () => {
   );
 
   return (
-    <nav className="relative backdrop-blur-xl bg-slate-900/80 text-white shadow-lg z-50">
+    <nav className="relative backdrop-blur-xl bg-slate-900/80 dark:bg-slate-900/80 text-black dark:text-white shadow-lg z-50">
       <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 to-pink-900/20" />
       <div className="container mx-auto px-4 py-4 relative">
         <div className="flex justify-between items-center">
@@ -112,15 +113,15 @@ const MainNavbar = () => {
             <div className="w-6 h-5 flex flex-col justify-between">
               <motion.span
                 animate={isMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                className="w-full h-0.5 bg-white transform origin-left transition-transform"
+                className="w-full h-0.5 bg-white dark:bg-white transform origin-left transition-transform"
               />
               <motion.span
                 animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                className="w-full h-0.5 bg-white"
+                className="w-full h-0.5 bg-white dark:bg-white"
               />
               <motion.span
                 animate={isMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                className="w-full h-0.5 bg-white transform origin-left transition-transform"
+                className="w-full h-0.5 bg-white dark:bg-white transform origin-left transition-transform"
               />
             </div>
           </motion.button>
@@ -148,7 +149,7 @@ const MainNavbar = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden absolute top-full left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-purple-500/20"
+              className="md:hidden absolute top-full left-0 right-0 bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-purple-500/20"
             >
               <div className="container mx-auto px-4 py-4">
                 <div className="flex flex-col space-y-4">
@@ -159,7 +160,7 @@ const MainNavbar = () => {
                   <NavLink to="/contests" icon={RiTrophyLine}>Contests</NavLink>
                   <NavLink to="/leaderboard" icon={RiBarChart2Line}>Leaderboard</NavLink>
                 </div>
-                <div className="mt-6 pt-4 border-t border-purple-500/20">
+                <div className="mt-2 pt-4 border-t border-purple-500/20">
                   {isAuthenticated ? (
                     <div className="flex flex-col space-y-4">
                       {user && (
@@ -182,7 +183,7 @@ const MainNavbar = () => {
                       <Link 
                         to="/login"
                         onClick={() => setIsMenuOpen(false)}
-                        className="text-white hover:text-purple-300 transition-colors"
+                        className="text-white dark:text-white hover:text-purple-300 dark:hover:text-purple-300 transition-colors"
                       >
                         Login
                       </Link>
