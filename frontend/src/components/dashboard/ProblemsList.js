@@ -18,7 +18,7 @@ const ProblemsList = () => {
   useEffect(() => {
     const fetchProblems = async () => {
       try {
-        const response = await axios.get('/api/problems');
+        const response = await axios.get(`${process.env.BACKEND_URI}/api/problems`);
         // Handle different response formats - ensure we always have an array
 
         const solvedProblems = response.data.problems.filter(

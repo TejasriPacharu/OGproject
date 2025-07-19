@@ -21,7 +21,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const problemsRes = await axios.get('/api/problems');
+        const problemsRes = await axios.get(`${process.env.BACKEND_URI}/api/problems`);
         const problemsToBeSolved = problemsRes.data.problems.filter(
           problem => !(problem.solvedBy || []).includes(String(user.id))
         );

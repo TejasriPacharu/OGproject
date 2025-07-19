@@ -41,7 +41,7 @@ const Profile = () => {
             'Authorization': `Bearer ${token}`
           }
         };
-        const response = await axios.get('/api/auth/me', config);
+        const response = await axios.get(`${process.env.BACKEND_URI}/api/auth/me`, config);
         setProfile(response.data.user);
         setLoading(false);
       } catch (error) {

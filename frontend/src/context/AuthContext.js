@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post("/api/auth/register", {
+      const res = await axios.post(`${process.env.BACKEND_URI}/api/auth/register`, {
         name,
         email,
         password,
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post("/api/auth/login", {
+      const res = await axios.post(`${process.env.BACKEND_URI}/api/auth/login`, {
         email,
         password,
       });
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
       setAuthToken(token);
       try {
         setLoading(true);
-        const res = await axios.get("/api/auth/me");
+        const res = await axios.get(`${process.env.BACKEND_URI}/api/auth/me`);
         setUser(res.data.user);
         setIsAuthenticated(true);
         setLoading(false);

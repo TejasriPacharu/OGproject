@@ -19,7 +19,7 @@ const Submissions = ({ user }) => {
     if (!targetId) return;
     const getUserSubmissions = async () => {
       try {
-        const { data } = await axios.get(`/api/submissions/user/${targetId}`, {
+        const { data } = await axios.get(`${process.env.BACKEND_URI}/api/submissions/user/${targetId}`, {
           withCredentials: true,
         });
         setSubmissions(data.submissions || []);
