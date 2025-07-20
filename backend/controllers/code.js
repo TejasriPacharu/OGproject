@@ -144,13 +144,16 @@ const submitCode = async (req, res) => {
             status,
         });
 
-        if(status === "solved"){
+        if (status === "solved") {
             const problemData = await Problem.findById(problemId);
             const solvedBy = problemData.solvedBy || [];
-            solvedBy.push(userId);
-            await Problem.updateOne({ _id: problemId }, { solvedBy });
-        }
         
+            if (!solvedBy.includes(userId)) {
+                solvedBy.push(userId);
+                await Problem.updateOne({ _id: problemId }, { solvedBy });
+            }
+        }
+                
         // Send response to the client first
         res.status(201).json({ message: "Submission successful!", submission });
         

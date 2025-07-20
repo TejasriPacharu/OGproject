@@ -95,10 +95,10 @@ const Profile = () => {
                 </h1>
                 <p className="text-gray-400 dark:text-gray-400 light:text-slate-600 mb-2">{profile.email}</p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-4 py-1.5 text-sm bg-[#6C63FF] dark:bg-[#6C63FF] light:bg-slate-300 bg-opacity-20 text-[#6C63FF] dark:text-[#6C63FF] light:text-slate-800 rounded-full font-medium border border-[#6C63FF] dark:border-[#6C63FF] light:border-slate-300 border-opacity-30">
+                  <span className="px-4 py-1.5 text-sm bg-[#6C63FF] bg-opacity-20 text-[#6C63FF] rounded-full font-medium border border-[#6C63FF] border-opacity-30">
                     Pro Coder ⚡
                   </span>
-                  <span className="px-4 py-1.5 text-sm bg-[#FF6B6B] dark:bg-[#FF6B6B] light:bg-slate-300 bg-opacity-20 text-[#FF6B6B] dark:text-[#FF6B6B] light:text-slate-800 rounded-full font-medium border border-[#FF6B6B] dark:border-[#FF6B6B] light:border-slate-300 border-opacity-30">
+                  <span className="px-4 py-1.5 text-sm bg-[#FF6B6B] bg-opacity-20 text-[#FF6B6B] rounded-full font-medium border border-[#FF6B6B] border-opacity-30">
                     🔥 {stats.streak} Day Streak
                   </span>
                 </div>
@@ -223,7 +223,7 @@ const Profile = () => {
           </motion.div>
         </div>
 
-       
+          <Submissions/>
       </div>
     </div>
   );
