@@ -111,7 +111,9 @@ const submitCode = async (req, res) => {
                 output = await cppTestCases(filePath, inputPath, outputPath, timeLimit);
                 status = "attempted";
             }
+            console.log("==================================");
             console.log("OUTPUT: ",output);
+            console.log("==================================");
 
             if(output === "accepted") {
                 verdict = "Accepted";
@@ -129,6 +131,11 @@ const submitCode = async (req, res) => {
             if(i === testcases.length - 1){
                 status = "solved";
             }
+        }
+
+        if(!output && status == "solved"){
+            console.log("The code is correct and passed the testcases, making output to accepted")
+            output = "Accepted";
         }
         
         const submission = await Submission.create({

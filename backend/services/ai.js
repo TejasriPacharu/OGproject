@@ -87,6 +87,7 @@ function calculateTimeComplexity(code, language = 'cpp') {
 // === GEMINI API ===
 async function getGeminiOptimizations(code, language, problemDescription, complexityAnalysis) {
   try {
+    console.log("============TRYING GEMINI API KEY===============")
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
@@ -133,6 +134,7 @@ Format your response as JSON with the following structure:
 
     return JSON.parse(jsonStr);
   } catch (error) {
+    console.log("=============SOMETHING WRONG GEMINI, TRYING OPEN AI================")
     console.error("Gemini failed, using OpenAI as fallback...");
     return await getOpenAIOptimizations(code, language, problemDescription, complexityAnalysis);
   }
@@ -141,6 +143,7 @@ Format your response as JSON with the following structure:
 // === OPENAI FALLBACK ===
 async function getOpenAIOptimizations(code, language, problemDescription, complexityAnalysis) {
   try {
+    console.log("=============OPEN AI OPTIMIZATIONS================")
     const prompt = `
 You are an expert software engineer specializing in algorithm optimization.
 Analyze the following ${language} code for the problem:
@@ -189,6 +192,7 @@ Format your response as JSON with the following structure:
 
     return JSON.parse(jsonStr);
   } catch (err) {
+    console.log("=============SOMETHING WRONG OPEN AI, TRYING GENERIC FALLBACK================")
     console.error("OpenAI fallback failed:", err.message);
     return getFallbackAnalysis(code, complexityAnalysis);
   }
@@ -196,6 +200,7 @@ Format your response as JSON with the following structure:
 
 // === GENERIC FALLBACK ===
 function getFallbackAnalysis(code, complexityAnalysis) {
+  console.log("=============GENERIC FALLBACK IS BEING PASSED================")
   return {
     analysis: "Automated code analysis failed. Here's a basic complexity assessment based on pattern detection.",
     suggestions: [
