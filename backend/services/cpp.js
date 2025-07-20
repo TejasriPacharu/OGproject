@@ -101,10 +101,6 @@ const cppTestCases = async (
     try {
       const inputContent = await fs.promises.readFile(inputPath, 'utf8');
       console.log("Input file content:", inputContent);
-      console.log("=============REQUIRED=================")
-      const codeOutputPathContents = await fs.promises.readFile(codeOutputPath, 'utf8');
-      console.log("Code output file content:", codeOutputPathContents);
-
     } catch (err) {
       console.error("Error reading input file:", err);
     }
@@ -122,7 +118,7 @@ const cppTestCases = async (
             if (error.killed) {
               console.log("=========THE SAME ERROR========");
 
-              return resolve("=-------------time limit execeededd----------");
+              return resolve("TIME LIMIT EXECEEDED!");
             }
             return reject({ error, stderr });
           }

@@ -108,7 +108,8 @@ const submitCode = async (req, res) => {
 
             if (language === "cpp") {
                 const timeLimit = problemData.timelimit || 5; 
-                output = await cppTestCases(filePath, inputPath, outputPath, timeLimit);
+                const TL = timeLimit + timeLimit;
+                output = await cppTestCases(filePath, inputPath, outputPath, TL);
                 status = "attempted";
             }
             console.log("==================================");
