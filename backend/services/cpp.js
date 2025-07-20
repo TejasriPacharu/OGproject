@@ -88,9 +88,14 @@ const cppTestCases = async (
     const codeOutputPath = path.join(outputPath, `${jobId}_output.txt`);
     const outPath = path.join(path.dirname(filePath), `${jobId}.out`);
   
+    console.log("==============================================")
+    console.log("DETAILS");
     console.log(`Running test case for ${filePath}`);
     console.log(`Input file path: ${inputPath}`);
     console.log(`Expected output: ${expectedOutput}`);
+    console.log(`Output file path: ${codeOutputPath}`);
+    console.log(`Output path: ${outPath}`);
+    console.log("==============================================")
     
     // Verify input file contents
     try {
@@ -108,35 +113,69 @@ const cppTestCases = async (
           if (stderr) {
             console.error("Compilation or execution stderr:", stderr);
             return reject(stderr);
-          } 
-          try {
-
-            const generatedOutput = await fs.promises.readFile(
-              codeOutputPath,
-              "utf8"
-            );
+          } else if (error) {
+            console.error("Execution error:", error);
+            if (error.killed) {
+              try {
             
-            // Log values for debugging
-            console.log("Generated output:", generatedOutput);
-            console.log("Expected output:", expectedOutput);
-            console.log("Normalized generated:", normalize(generatedOutput));
-            console.log("Normalized expected:", normalize(expectedOutput));
-            
-            // More flexible comparison that focuses on the numeric content
-            const normalizedGenerated = normalize(generatedOutput);
-            const normalizedExpected = normalize(expectedOutput);
-            
-            if (normalizedGenerated === normalizedExpected) {
-              console.log("Test passed! Outputs match after normalization");
-              resolve("accepted");
-            } else {
-              console.log("Test failed. Outputs don't match after normalization");
-              resolve("failed");
+                const generatedOutput = await fs.promises.readFile(
+                  codeOutputPath,
+                  "utf8"
+                );
+                
+                // Log values for debugging
+                console.log("Generated output:", generatedOutput);
+                console.log("Expected output:", expectedOutput);
+                console.log("Normalized generated:", normalize(generatedOutput));
+                console.log("Normalized expected:", normalize(expectedOutput));
+                
+                // More flexible comparison that focuses on the numeric content
+                const normalizedGenerated = normalize(generatedOutput);
+                const normalizedExpected = normalize(expectedOutput);
+                
+                if (normalizedGenerated === normalizedExpected) {
+                  console.log("Test passed! Outputs match after normalization");
+                  resolve("accepted");
+                } else {
+                  console.log("Test failed. Outputs don't match after normalization");
+                  resolve("failed");
+                }
+              } catch (readError) {
+                console.error("Error reading output file:", readError);
+                reject(readError);
+              }
             }
-          } catch (readError) {
-            console.error("Error reading output file:", readError);
-            reject(readError);
+            return reject({ error, stderr });
           }
+  
+          // try {
+            
+          //   const generatedOutput = await fs.promises.readFile(
+          //     codeOutputPath,
+          //     "utf8"
+          //   );
+            
+          //   // Log values for debugging
+          //   console.log("Generated output:", generatedOutput);
+          //   console.log("Expected output:", expectedOutput);
+          //   console.log("Normalized generated:", normalize(generatedOutput));
+          //   console.log("Normalized expected:", normalize(expectedOutput));
+            
+          //   // More flexible comparison that focuses on the numeric content
+          //   const normalizedGenerated = normalize(generatedOutput);
+          //   const normalizedExpected = normalize(expectedOutput);
+            
+          //   if (normalizedGenerated === normalizedExpected) {
+          //     console.log("Test passed! Outputs match after normalization");
+          //     resolve("accepted");
+          //   } else {
+          //     console.log("Test failed. Outputs don't match after normalization");
+          //     resolve("failed");
+          //   }
+          // } catch (readError) {
+          //   console.error("Error reading output file:", readError);
+          //   reject(readError);
+          // }
         }
       );
   
