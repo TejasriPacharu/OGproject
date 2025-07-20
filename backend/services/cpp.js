@@ -108,15 +108,9 @@ const cppTestCases = async (
           if (stderr) {
             console.error("Compilation or execution stderr:", stderr);
             return reject(stderr);
-          } else if (error) {
-            console.error("Execution error:", error);
-            if (error.killed) {
-              return resolve("time limit exceeded");
-            }
-            return reject({ error, stderr });
-          }
-  
+          } 
           try {
+
             const generatedOutput = await fs.promises.readFile(
               codeOutputPath,
               "utf8"

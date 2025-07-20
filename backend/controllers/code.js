@@ -133,11 +133,6 @@ const submitCode = async (req, res) => {
             }
         }
 
-        if(!output && status == "solved"){
-            console.log("The code is correct and passed the testcases, making output to accepted")
-            output = "Accepted";
-        }
-        
         const submission = await Submission.create({
             userId,
             problemId,
