@@ -3,17 +3,6 @@ const Problem = require("../models/Problem");
 const path = require('path');
 const fs = require('fs');
 
-// Helper function to get problems from file (reusing from problem.js)
-// const getProblemsFromFile = () => {
-//   try {
-//     const problemsFilePath = path.join(__dirname, '../data/problems.json');
-//     const problemsData = fs.readFileSync(problemsFilePath, 'utf8');
-//     return JSON.parse(problemsData);
-//   } catch (error) {
-//     console.error('Error reading problems file:', error);
-//     return [];
-//   }
-// };
 
 // getAllSubmissions
 // createSubmission

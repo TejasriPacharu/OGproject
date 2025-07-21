@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const problemRoutes = require('./routes/problem');
 const submissionRoutes = require("./routes/submission");
 const codeRoutes = require("./routes/code");
+const userRoutes = require("./routes/users");
 // Create Express app
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/problems', problemRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/code',codeRoutes);
+app.use('/api/users',userRoutes);
 
 // Default route
 app.get('/', (req, res) => {

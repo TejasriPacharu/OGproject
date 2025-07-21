@@ -154,20 +154,6 @@ const Submissions = ({ user }) => {
               );
             if (dayIdx >= dayCount) break;
           }
-
-          return (
-            <motion.div
-              key={`month-${monthIndex}`}
-              className="flex flex-col items-center min-w-[46px]"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex flex-row gap-1">{gridColumns}</div>
-              <p className="text-center text-xs font-medium text-slate-400 mt-2">
-                {monthNames[monthIndex]}
-              </p>
-            </motion.div>
-          );
         })}
       </div>
     </motion.div>
