@@ -19,10 +19,17 @@ const Submissions = ({ user }) => {
     if (!targetId) return;
     const getUserSubmissions = async () => {
       try {
+        const token = localStorage.getItem('token');
         const { data } = await axios.get(`${BACKEND_URI}/api/submissions/user/${targetId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           withCredentials: true,
         });
         setSubmissions(data.submissions || []);
+        console.log("============================");
+        console.log(data.submissions);
+        console.log("============================");
       } catch (error) {
         toast.error("Failed to fetch submissions 😢");
         console.error("Failed to load submissions:", error);
@@ -30,7 +37,7 @@ const Submissions = ({ user }) => {
     };
     getUserSubmissions();
   }, [targetId]);
-
+   
   const submissionGroups = submissions.reduce((acc, s) => {
     const date = s.createdAt.split("T")[0];
     acc[date] = acc[date] ? [...acc[date], s] : [s];

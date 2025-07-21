@@ -222,8 +222,7 @@ const Profile = () => {
             </div>
           </motion.div>
         </div>
-
-          <Submissions/>
+          <Submissions user={user}/>
       </div>
     </div>
   );
