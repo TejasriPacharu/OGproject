@@ -10,6 +10,7 @@ const {
     compileCode,
     runCode
 } = require("../controllers/submission");
+const { protect } = require("../middleware/auth");
 
 const router = require("express").Router();
 
@@ -26,10 +27,10 @@ router.route("/:id")
 
 // Routes for user submissions
 router.route("/user/:userId")
-      .get(getAllUserSubmissions);
+      .get(protect, getAllUserSubmissions);
 
 // Routes for user problem-specific submissions
 router.route("/user/:userId/problem/:problemId")
-      .get(getUserProblemSubmissions);
+      .get(protect, getUserProblemSubmissions);
 
 module.exports = router;
