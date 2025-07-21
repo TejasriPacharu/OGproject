@@ -12,6 +12,25 @@ const Profile = () => {
   const { user } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeDays, setActiveDays] = useState(0);
+  const [problemStats, setProblemStats] = useState({
+    solved: 0,
+    total: 0,
+    rank: {
+      easy: '0/0',
+      medium: '0/0',
+      hard: '0/0'
+    }
+  });
+  const [weeklyStats, setWeeklyStats] = useState([
+    { day: 'Sun', count: 0 },
+    { day: 'Mon', count: 0 },
+    { day: 'Tue', count: 0 },
+    { day: 'Wed', count: 0 },
+    { day: 'Thu', count: 0 },
+    { day: 'Fri', count: 0 },
+    { day: 'Sat', count: 0 },
+  ]);
   const navigate = useNavigate();
 
   // Updated skills with more Gen Z relevant tech stack
@@ -22,37 +41,79 @@ const Profile = () => {
     { name: 'Java', level: 88, color: '#6C63FF' },
   ];
 
-  const stats = {
-    solved: 228,
-    total: 2811,
-    rank: {
-      easy: '98/100',
-      medium: '114/178',
-      hard: '16/149'
-    },
-    streak: 15
-  };
-
+  // Fetch user profile and submission stats
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchUserData = async () => {
+      if (!user?.id) return;
+      
       try {
+        setLoading(true);
+        
+        // Fetch user profile
         const token = localStorage.getItem('token');
         const config = {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         };
+        
         const response = await axios.get(`${BACKEND_URI}/api/auth/me`, config);
         setProfile(response.data.user);
+        
+        // Fetch all problems to get total counts
+        const problemsRes = await axios.get(`${BACKEND_URI}/api/problems`);
+        const allProblems = problemsRes.data.problems || [];
+        
+        const totalProblems = allProblems.length;
+        const easyProblems = allProblems.filter(p => p.difficulty === 'Easy').length;
+        const mediumProblems = allProblems.filter(p => p.difficulty === 'Medium').length;
+        const hardProblems = allProblems.filter(p => p.difficulty === 'Hard').length;
+        
+        // Fetch user submissions
+        const submissionsRes = await axios.get(`${BACKEND_URI}/api/submissions/user/${user.id}`);
+        const submissions = submissionsRes.data.submissions || [];
+        
+        // Get unique solved problems (only count successful submissions)
+        const solvedProblems = new Set();
+        const solvedEasy = new Set();
+        const solvedMedium = new Set();
+        const solvedHard = new Set();
+        
+        submissions.forEach(sub => {
+          if (sub.verdict === 'Accepted') {
+            solvedProblems.add(sub.problemId);
+            
+            // Find the problem to determine its difficulty
+            const problem = allProblems.find(p => p._id === sub.problemId);
+            if (problem) {
+              if (problem.difficulty === 'Easy') solvedEasy.add(sub.problemId);
+              else if (problem.difficulty === 'Medium') solvedMedium.add(sub.problemId);
+              else if (problem.difficulty === 'Hard') solvedHard.add(sub.problemId);
+            }
+          }
+        });
+        
+        // Update problem stats
+        setProblemStats({
+          solved: solvedProblems.size,
+          total: totalProblems,
+          rank: {
+            easy: `${solvedEasy.size}/${easyProblems}`,
+            medium: `${solvedMedium.size}/${mediumProblems}`,
+            hard: `${solvedHard.size}/${hardProblems}`
+          }
+        });
+        
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching profile data:', error);
         toast.error('Failed to load profile data');
         setLoading(false);
       }
     };
-    fetchProfile();
-  }, []);
+    
+    fetchUserData();
+  }, [user]);
 
   if (loading) {
     return (
@@ -99,7 +160,7 @@ const Profile = () => {
                     Pro Coder ⚡
                   </span>
                   <span className="px-4 py-1.5 text-sm bg-[#FF6B6B] bg-opacity-20 text-[#FF6B6B] rounded-full font-medium border border-[#FF6B6B] border-opacity-30">
-                    🔥 {stats.streak} Day Streak
+                    🔥 {activeDays} Day{activeDays !== 1 ? 's' : ''} Streak
                   </span>
                 </div>
               </div>
@@ -147,7 +208,7 @@ const Profile = () => {
                     fill="none"
                     stroke="url(#statsGradient)"
                     strokeWidth="8"
-                    strokeDasharray={`${(stats.solved / stats.total) * 283} 283`}
+                    strokeDasharray={`${(problemStats.solved / problemStats.total) * 283} 283`}
                   />
                   <defs>
                     <linearGradient id="statsGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -157,7 +218,7 @@ const Profile = () => {
                   </defs>
                 </svg>
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                  <div className="text-3xl font-bold text-white dark:text-white light:text-slate-800">{stats.solved}</div>
+                  <div className="text-3xl font-bold text-white dark:text-white light:text-slate-800">{problemStats.solved}</div>
                   <div className="text-sm text-gray-400 dark:text-gray-400 light:text-slate-600">Problems Solved</div>
                 </div>
               </div>
@@ -167,21 +228,21 @@ const Profile = () => {
                   className="bg-[#ffffff0a] dark:bg-[#ffffff0a] light:bg-slate-100 rounded-xl p-4 text-center border border-[#ffffff1a] dark:border-[#ffffff1a] light:border-slate-300/50 hover:border-[#50FA7B] dark:hover:border-[#50FA7B] light:hover:border-slate-300 transition-all"
                 >
                   <div className="text-[#50FA7B] dark:text-[#50FA7B] light:text-slate-800 text-sm font-medium">Easy</div>
-                  <div className="text-white dark:text-white light:text-slate-800 font-bold text-lg">{stats.rank.easy}</div>
+                  <div className="text-white dark:text-white light:text-slate-800 font-bold text-lg">{problemStats.rank.easy}</div>
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
                   className="bg-[#ffffff0a] dark:bg-[#ffffff0a] light:bg-slate-100 rounded-xl p-4 text-center border border-[#ffffff1a] dark:border-[#ffffff1a] light:border-slate-300/50 hover:border-[#FFD93D] dark:hover:border-[#FFD93D] light:hover:border-slate-300 transition-all"
                 >
                   <div className="text-[#FFD93D] dark:text-[#FFD93D] light:text-slate-800 text-sm font-medium">Medium</div>
-                  <div className="text-white dark:text-white light:text-slate-800 font-bold text-lg">{stats.rank.medium}</div>
+                  <div className="text-white dark:text-white light:text-slate-800 font-bold text-lg">{problemStats.rank.medium}</div>
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
                   className="bg-[#ffffff0a] dark:bg-[#ffffff0a] light:bg-slate-100 rounded-xl p-4 text-center border border-[#ffffff1a] dark:border-[#ffffff1a] light:border-slate-300/50 hover:border-[#FF6B6B] dark:hover:border-[#FF6B6B] light:hover:border-slate-300 transition-all"
                 >
                   <div className="text-[#FF6B6B] dark:text-[#FF6B6B] light:text-slate-800 text-sm font-medium">Hard</div>
-                  <div className="text-white dark:text-white light:text-slate-800 font-bold text-lg">{stats.rank.hard}</div>
+                  <div className="text-white dark:text-white light:text-slate-800 font-bold text-lg">{problemStats.rank.hard}</div>
                 </motion.div>
               </div>
             </div>
@@ -222,8 +283,8 @@ const Profile = () => {
             </div>
           </motion.div>
         </div>
-          <Submissions user={user}/>
-      </div>
+          <Submissions user={user} onActiveDaysChange={setActiveDays}/>
+      </div>  
     </div>
   );
 };

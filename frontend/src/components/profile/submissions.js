@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { BACKEND_URI } from "../../config";
 
-const Submissions = ({ user }) => {
+const Submissions = ({ user, onActiveDaysChange }) => {
   const targetId = user?.id;
   const year = new Date().getFullYear();
   const days = monthDaysByYear(year);
@@ -19,17 +19,8 @@ const Submissions = ({ user }) => {
     if (!targetId) return;
     const getUserSubmissions = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const { data } = await axios.get(`${BACKEND_URI}/api/submissions/user/${targetId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true,
-        });
+        const { data } = await axios.get(`${BACKEND_URI}/api/submissions/user/${targetId}`);
         setSubmissions(data.submissions || []);
-        console.log("============================");
-        console.log(data.submissions);
-        console.log("============================");
       } catch (error) {
         toast.error("Failed to fetch submissions 😢");
         console.error("Failed to load submissions:", error);
@@ -46,6 +37,13 @@ const Submissions = ({ user }) => {
 
   const activeDaysCount = Object.keys(submissionGroups).length;
   const streakEmoji = activeDaysCount > 30 ? "🔥" : activeDaysCount > 15 ? "💪" : "✨";
+  
+  // Pass activeDaysCount to parent component when it changes
+  useEffect(() => {
+    if (onActiveDaysChange) {
+      onActiveDaysChange(activeDaysCount);
+    }
+  }, [activeDaysCount, onActiveDaysChange]);
 
   return (
     <motion.div
@@ -161,6 +159,14 @@ const Submissions = ({ user }) => {
               );
             if (dayIdx >= dayCount) break;
           }
+          
+          // Add a month label and return the gridColumns
+          return (
+            <div key={`month-${monthIndex}`} className="flex flex-col gap-1">
+              <div className="text-xs text-slate-400 mb-1 text-center">{monthNames[monthIndex]}</div>
+              <div className="flex flex-row gap-1">{gridColumns}</div>
+            </div>
+          );
         })}
       </div>
     </motion.div>
