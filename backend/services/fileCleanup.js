@@ -11,6 +11,14 @@ const dirCodes = path.join(__dirname, "codes");
 const dirInputs = path.join(__dirname, "inputs");
 const dirOutputs = path.join(__dirname, "outputs");
 
+
+const JOBS_DIR = path.join(__dirname, "jobs");
+
+if (!fs.existsSync(JOBS_DIR)) {
+  fs.mkdirSync(JOBS_DIR, { recursive: true });
+}
+
+
 // Log directory paths during initialization for debugging
 console.log("Cleanup initialized with directories:");
 console.log(`  - Codes: ${dirCodes}`);
@@ -147,8 +155,34 @@ const cleanupAllDirectories = async (maxAgeMs = 24 * 60 * 60 * 1000) => {
   console.log('Finished cleaning all directories');
 };
 
+/**
+ * Clean up an entire job directory (Docker-based execution)
+ * @param {string} jobDir - Absolute path to job directory
+ */
+const cleanupJobDirectory = async (jobDir) => {
+  try {
+    if (!jobDir) return;
+
+    if (fs.existsSync(jobDir)) {
+      await fs.promises.rm(jobDir, {
+        recursive: true,
+        force: true,
+      });
+      console.log(`Deleted job directory: ${jobDir}`);
+    } else {
+      console.log(`Job directory not found: ${jobDir}`);
+    }
+  } catch (error) {
+    console.error(`Failed to delete job directory ${jobDir}:`, error);
+  }
+};
+
+
 module.exports = {
   cleanupJobFiles,
   cleanupOldFiles,
-  cleanupAllDirectories
+  cleanupAllDirectories,
+  cleanupJobDirectory
 };
+
+

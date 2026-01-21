@@ -149,7 +149,11 @@ ${paramDeclarations}
     const sanitizedJobId = sanitizeJobId(jobID);
     filename = `${sanitizedJobId}.${format}`;
   } else {
-    filename = `${jobID}.${format}`;
+     filename =
+  format === "cpp" ? "solution.cpp" :
+  format === "python" ? "solution.py" :
+  `${jobID}.${format}`;
+
   }
 
   const filePath = path.join(dirCodes, filename);

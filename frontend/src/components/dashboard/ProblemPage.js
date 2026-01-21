@@ -4,11 +4,109 @@ import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import axios from 'axios';
 import Editor from '@monaco-editor/react';
-import { FaCheckCircle, FaFileAlt, FaSadTear, FaRobot, FaChartBar, FaCode, FaLightbulb } from 'react-icons/fa';
+import { 
+    FaCheckCircle, 
+    FaFileAlt, 
+    FaTimes, 
+    FaRobot, 
+    FaChartBar, 
+    FaCode, 
+    FaLightbulb,
+    FaPlay,
+    FaPaperPlane,
+    FaTerminal,
+    FaArrowLeft,
+    FaClock,
+    FaMemory,
+    FaExclamationTriangle
+} from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Confetti from 'react-confetti';
 import { BACKEND_URI } from '../../config';
+
+// Difficulty badge component
+const DifficultyBadge = ({ difficulty }) => {
+    const config = {
+        easy: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+        medium: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
+        hard: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30' }
+    };
+    const style = config[difficulty?.toLowerCase()] || config.easy;
+    
+    return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${style.bg} ${style.text} border ${style.border}`}>
+            {difficulty}
+        </span>
+    );
+};
+
+// Tag component
+const Tag = ({ children }) => (
+    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-700/50 text-slate-300 border border-slate-600/50">
+        {children}
+    </span>
+);
+
+// Section header component
+const SectionHeader = ({ icon: Icon, title, color = "purple" }) => {
+    const colors = {
+        purple: "text-purple-400",
+        blue: "text-blue-400",
+        green: "text-emerald-400",
+        amber: "text-amber-400"
+    };
+    return (
+        <h3 className={`flex items-center gap-2 text-sm font-semibold ${colors[color]} uppercase tracking-wider mb-3`}>
+            <Icon className="text-xs" />
+            {title}
+        </h3>
+    );
+};
+
+// Button component for consistent styling
+const Button = ({ 
+    children, 
+    onClick, 
+    disabled, 
+    variant = "primary", 
+    size = "md",
+    loading = false,
+    icon: Icon
+}) => {
+    const variants = {
+        primary: "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/20",
+        success: "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/20",
+        secondary: "bg-slate-700/80 hover:bg-slate-600/80 text-slate-200 border border-slate-600/50",
+        ghost: "bg-transparent hover:bg-slate-700/50 text-slate-300 border border-slate-600/50"
+    };
+    
+    const sizes = {
+        sm: "px-3 py-1.5 text-xs",
+        md: "px-4 py-2 text-sm",
+        lg: "px-5 py-2.5 text-sm"
+    };
+    
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled || loading}
+            className={`
+                inline-flex items-center justify-center gap-2 
+                font-semibold rounded-lg transition-all duration-200
+                disabled:opacity-50 disabled:cursor-not-allowed
+                ${variants[variant]} ${sizes[size]}
+            `}
+        >
+            {loading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : Icon ? (
+                <Icon className="text-sm" />
+            ) : null}
+            {children}
+        </button>
+    );
+};
 
 const ProblemPage = () => {
     const { id } = useParams();
@@ -36,6 +134,7 @@ const ProblemPage = () => {
     const [showAnalysis, setShowAnalysis] = useState(false);
     const [codeAnalysis, setCodeAnalysis] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [activeTab, setActiveTab] = useState('output');
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -43,7 +142,6 @@ const ProblemPage = () => {
                 const response = await axios.get(`${BACKEND_URI}/api/problems/${id}`);
                 setProblem(response.data);
                 
-                // Set initial code stub based on selected language
                 if (response.data.codeStubs && response.data.codeStubs.length > 0) {
                     const stub = response.data.codeStubs[0];
                     setCode(stub[language] || '');
@@ -61,7 +159,6 @@ const ProblemPage = () => {
 
     const handleLanguageChange = (e) => {
         setLanguage(e.target.value);
-        // Update code stub when language changes
         if (problem && problem.codeStubs && problem.codeStubs.length > 0) {
             const stub = problem.codeStubs[0];
             setCode(stub[e.target.value] || '');
@@ -88,6 +185,7 @@ const ProblemPage = () => {
         setOutput('');
         setStatus('Running...');
         setVerdict('');
+        setActiveTab('output');
         
         try {
             const response = await axios.post(`${BACKEND_URI}/api/code/run`, {
@@ -114,6 +212,7 @@ const ProblemPage = () => {
         setOutput('');
         setStatus('Submitting...');
         setVerdict('');
+        setActiveTab('output');
         
         try {
             const response = await axios.post(`${BACKEND_URI}/api/code/submit`, {
@@ -131,11 +230,9 @@ const ProblemPage = () => {
 
             if(submission.status === 'solved') {
                 showToast('🎉 Problem solved successfully!');
-                // Request AI analysis after successful submission
                 analyzeCode();
             } else if(submission.verdict === 'Wrong Answer') {
                 showToast('Keep trying! Your solution needs some work.', 'warning');
-                // Still offer analysis for wrong answers
                 analyzeCode();
             } else if(submission.verdict === 'Compilation Error') {
                 showToast('Check your code for compilation errors', 'error');
@@ -151,14 +248,13 @@ const ProblemPage = () => {
     };
 
     const analyzeCode = async () => {
-        // Don't analyze if code is empty
         if (!code.trim()) {
             showToast('Cannot analyze empty code', 'warning');
             return;
         }
 
         setIsAnalyzing(true);
-        showToast('🤖 AI is analyzing your code...', 'info');
+        showToast('Analyzing your code...', 'info');
         
         try {
             const response = await axios.post(`${BACKEND_URI}/api/code/analyze`, {
@@ -166,10 +262,7 @@ const ProblemPage = () => {
                 code,
                 language
             });
-            console.log("=============================================");
-            console.log(response.data);
             setCodeAnalysis(response.data.analysis);
-            console.log("")
             setIsAnalyzing(false);
             setShowAnalysis(true);
         } catch (error) {
@@ -179,25 +272,26 @@ const ProblemPage = () => {
         }
     };
 
-    // Function to render the code quality score with color
     const renderQualityScore = (score) => {
-        let colorClass = 'text-yellow-400';
+        let colorClass = 'text-amber-400';
+        let bgClass = 'from-amber-500/20 to-amber-600/10';
         
         if (score >= 8) {
-            colorClass = 'text-green-400';
+            colorClass = 'text-emerald-400';
+            bgClass = 'from-emerald-500/20 to-emerald-600/10';
         } else if (score <= 4) {
-            colorClass = 'text-red-400';
+            colorClass = 'text-rose-400';
+            bgClass = 'from-rose-500/20 to-rose-600/10';
         }
         
         return (
-            <div className="flex items-center">
+            <div className={`flex items-baseline gap-1 bg-gradient-to-br ${bgClass} rounded-xl px-4 py-3`}>
                 <span className={`text-4xl font-bold ${colorClass}`}>{score}</span>
-                <span className="text-sm text-slate-400 ml-2">/10</span>
+                <span className="text-slate-500 text-sm font-medium">/10</span>
             </div>
         );
     };
 
-    // Add back the missing handleCustomCheck function
     const handleCustomCheck = async () => {
         setIsCustomRunning(true);
         setCustomOutput('');
@@ -216,512 +310,627 @@ const ProblemPage = () => {
         }
     };
 
+    // Get verdict styling
+    const getVerdictStyle = () => {
+        if (verdict === 'Accepted' || status === 'solved') {
+            return {
+                bg: 'bg-emerald-500/10',
+                border: 'border-emerald-500/30',
+                text: 'text-emerald-400',
+                icon: FaCheckCircle
+            };
+        } else if (verdict === 'Wrong Answer') {
+            return {
+                bg: 'bg-rose-500/10',
+                border: 'border-rose-500/30',
+                text: 'text-rose-400',
+                icon: FaTimes
+            };
+        } else if (verdict === 'Compilation Error') {
+            return {
+                bg: 'bg-amber-500/10',
+                border: 'border-amber-500/30',
+                text: 'text-amber-400',
+                icon: FaExclamationTriangle
+            };
+        }
+        return {
+            bg: 'bg-slate-800/50',
+            border: 'border-slate-700/50',
+            text: 'text-slate-400',
+            icon: FaTerminal
+        };
+    };
+
+    // Loading state
     if (loading) {
         return (
-            <div className="container mx-auto p-6 flex justify-center items-center min-h-[500px]">
-                <div className="flex flex-col items-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                    <p className="text-lg text-gray-700">Loading problem...</p>
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-3 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                    <p className="text-slate-400 font-medium">Loading problem...</p>
                 </div>
             </div>
         );
     }
 
+    // Error state
     if (error) {
         return (
-            <div className="container mx-auto p-6">
-                <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center max-w-2xl mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Problem Not Found</h2>
-                    <p className="text-gray-600 mb-6">{error}</p>
-                    <div className="flex justify-center gap-4">
-                        <button 
-                            onClick={() => navigate(-1)}
-                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all">
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-500/10 flex items-center justify-center">
+                        <FaExclamationTriangle className="text-2xl text-rose-400" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Problem Not Found</h2>
+                    <p className="text-slate-400 mb-6 text-sm">{error}</p>
+                    <div className="flex gap-3 justify-center">
+                        <Button variant="ghost" onClick={() => navigate(-1)}>
                             Go Back
-                        </button>
-                        <button 
-                            onClick={() => navigate('/problems')}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                        </Button>
+                        <Button variant="primary" onClick={() => navigate('/problems')}>
                             All Problems
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
         );
     }
 
+    const verdictStyle = getVerdictStyle();
+
     return (
-        <div className="min-h-screen bg-[#0F172A] text-white px-1 md:px-4 py-4">
-            <div className="w-full">
-                {/* Top Nav Button */}
-                <div className="mb-6">
+        <div className="min-h-screen bg-slate-900 text-white">
+            {/* Confetti for success */}
+            {(verdict === 'Accepted' || status === 'solved') && (
+                <Confetti 
+                    numberOfPieces={200} 
+                    recycle={false} 
+                    className="fixed inset-0 pointer-events-none z-50" 
+                />
+            )}
+
+            {/* Top Navigation Bar */}
+            <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800/80">
+                <div className="flex items-center justify-between px-4 lg:px-6 h-14">
                     <button
                         onClick={() => navigate('/problems')}
-                        className="flex items-center bg-gradient-to-r from-purple-600 to-blue-500 text-white px-4 py-2 rounded-xl shadow-lg hover:from-purple-700 hover:to-blue-600 transition-all font-semibold"
+                        className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Problems
+                        <FaArrowLeft className="text-xs" />
+                        <span>Problems</span>
                     </button>
-                </div>
-
-                <div className="grid lg:grid-cols-12 gap-8">
-                    {/* Problem Description */}
-                    <div className="lg:col-span-6">
-                        <div className="bg-gradient-to-br from-slate-700/60 to-slate-900/80 rounded-2xl p-3 md:p-4 shadow-xl border border-slate-700/60 backdrop-blur-xl max-h-[80vh] overflow-y-auto custom-scrollbar">
-                            <div className="flex justify-between items-center mb-4">
-                                <h1 className="text-3xl text-left font-extrabold text-white flex items-center gap-2">
-                                    {problem.title}
-                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(problem.difficulty)}`}>{problem.difficulty}</span>
-                                    {problem.solvedBy?.includes(String(user.id)) && (
-                                        <FaCheckCircle className="text-green-400 ml-1" />
-                                    )}
-                                </h1>
+                    
+                    <div className="flex items-center gap-3">
+                        <DifficultyBadge difficulty={problem.difficulty} />
+                        {problem.solvedBy?.includes(String(user.id)) && (
+                            <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
+                                <FaCheckCircle />
+                                <span>Solved</span>
                             </div>
+                        )}
+                    </div>
+                </div>
+            </header>
 
-                            <div className="mb-4 flex flex-wrap gap-2">
-                                {problem.tags?.map((tag, index) => (
-                                    <span key={index} className="bg-purple-600/20 border border-purple-400/30 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold">
-                                        {tag}
-                                    </span>
+            {/* Main Content - Split Layout */}
+            <div className="flex flex-col lg:flex-row h-[calc(100vh-56px)]">
+                
+                {/* Left Panel - Problem Description */}
+                <div className="lg:w-1/2 xl:w-5/12 border-r border-slate-800/80 overflow-y-auto">
+                    <div className="p-6 lg:p-8">
+                        {/* Problem Title */}
+                        <h1 className="text-2xl lg:text-3xl font-bold text-white mb-4 leading-tight">
+                            {problem.title}
+                        </h1>
+
+                        {/* Tags */}
+                        {problem.tags?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {problem.tags.map((tag, index) => (
+                                    <Tag key={index}>{tag}</Tag>
                                 ))}
                             </div>
+                        )}
 
-                            <div className="mb-6">
-                                <h3 className="text-left text-lg font-bold mb-2 text-purple-300">Description</h3>
-                                <div className="text-left text-slate-200 whitespace-pre-line leading-relaxed">
-                                    {showFullDescription ? problem.description : (problem.description.slice(0, 300) + (problem.description.length > 300 ? '...' : ''))}
-                                    {problem.description.length > 300 && (
-                                        <button
-                                            onClick={() => setShowFullDescription(!showFullDescription)}
-                                            className="ml-2 text-purple-400 hover:underline font-semibold"
-                                        >
-                                            {showFullDescription ? 'Show Less' : 'Read More'}
-                                        </button>
-                                    )}
-                                </div>
+                        {/* Description */}
+                        <section className="mb-8">
+                            <SectionHeader icon={FaFileAlt} title="Description" color="purple" />
+                            <div className="text-slate-300 leading-relaxed text-[15px] whitespace-pre-line">
+                                {showFullDescription 
+                                    ? problem.description 
+                                    : (problem.description.slice(0, 400) + (problem.description.length > 400 ? '...' : ''))}
+                                {problem.description.length > 400 && (
+                                    <button
+                                        onClick={() => setShowFullDescription(!showFullDescription)}
+                                        className="ml-2 text-purple-400 hover:text-purple-300 font-medium transition-colors"
+                                    >
+                                        {showFullDescription ? 'Show less' : 'Read more'}
+                                    </button>
+                                )}
                             </div>
+                        </section>
 
-                            {problem.constraints && (
-                                <div className="mb-6">
-                                    <h3 className="text-left text-lg font-bold mb-2 text-blue-300">Constraints</h3>
-                                    <div className="text-left bg-slate-800/70 p-4 rounded-lg text-blue-200 whitespace-pre-line font-mono text-sm border border-blue-500/20">
-                                        {problem.constraints}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <h3 className="text-left text-lg font-bold mb-2 text-green-300">Examples</h3>
+                        {/* Examples */}
+                        <section className="mb-8">
+                            <SectionHeader icon={FaCode} title="Examples" color="green" />
+                            <div className="space-y-4">
                                 {problem.testCases?.filter(tc => tc.sample).map((testCase, index) => (
-                                    <div key={index} className="mb-4 border border-green-500/20 rounded-xl overflow-hidden bg-gradient-to-br from-green-800/40 to-slate-900/40">
-                                        <div className="px-4 py-2 border-b border-green-500/10 text-green-200 font-semibold">Example {index + 1}</div>
-                                        <div className="p-4">
-                                            <div className="mb-3">
-                                                <span className="text-left font-medium text-green-300 block mb-1">Input:</span>
-                                                <pre className="text-left bg-black/30 p-3 rounded-lg overflow-x-auto text-sm font-mono text-green-100">{testCase.input}</pre>
+                                    <div 
+                                        key={index} 
+                                        className="rounded-xl overflow-hidden bg-slate-800/30 border border-slate-700/50"
+                                    >
+                                        <div className="px-4 py-2.5 bg-slate-800/50 border-b border-slate-700/50">
+                                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                                Example {index + 1}
+                                            </span>
+                                        </div>
+                                        <div className="p-4 space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                                                    Input
+                                                </label>
+                                                <pre className="bg-slate-900/50 rounded-lg p-3 text-sm font-mono text-emerald-300 overflow-x-auto border border-slate-700/30">
+                                                    {testCase.input}
+                                                </pre>
                                             </div>
-                                            <div className="mb-3">
-                                                <span className="text-left font-medium text-green-300 block mb-1">Output:</span>
-                                                <pre className="text-left bg-black/30 p-3 rounded-lg overflow-x-auto text-sm font-mono text-green-100">{testCase.output}</pre>
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                                                    Output
+                                                </label>
+                                                <pre className="bg-slate-900/50 rounded-lg p-3 text-sm font-mono text-blue-300 overflow-x-auto border border-slate-700/30">
+                                                    {testCase.output}
+                                                </pre>
                                             </div>
                                             {testCase.explanation && (
                                                 <div>
-                                                    <span className="text-left font-medium text-green-300 block mb-1">Explanation:</span>
-                                                    <div className="text-left text-green-100 text-sm">{testCase.explanation}</div>
+                                                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                                                        Explanation
+                                                    </label>
+                                                    <p className="text-slate-400 text-sm leading-relaxed">
+                                                        {testCase.explanation}
+                                                    </p>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 ))}
                             </div>
+                        </section>
+
+                        {/* Constraints */}
+                        {problem.constraints && (
+                            <section className="mb-8">
+                                <SectionHeader icon={FaExclamationTriangle} title="Constraints" color="amber" />
+                                <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/50">
+                                    <pre className="text-sm font-mono text-amber-200/90 whitespace-pre-line leading-relaxed">
+                                        {problem.constraints}
+                                    </pre>
+                                </div>
+                            </section>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Panel - Code Editor & Output */}
+                <div className="lg:w-1/2 xl:w-7/12 flex flex-col overflow-hidden bg-slate-950/50">
+                    
+                    {/* Editor Header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-900/50">
+                        <div className="flex items-center gap-4">
+                            {/* Language Selector */}
+                            <div className="flex items-center gap-2">
+                                <label htmlFor="language" className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Language
+                                </label>
+                                <select
+                                    id="language"
+                                    value={language}
+                                    onChange={handleLanguageChange}
+                                    className="bg-slate-800 border border-slate-700/80 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                                >
+                                    <option value="cpp">C++</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="javascript">JavaScript</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setShowCustomCheck(true);
+                                    setCustomLang(language);
+                                    setCustomCode(code);
+                                    setCustomInput('');
+                                    setCustomOutput('');
+                                }}
+                            >
+                                Custom Input
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                icon={FaRobot}
+                                onClick={analyzeCode}
+                                disabled={isAnalyzing || !code.trim()}
+                                loading={isAnalyzing}
+                            >
+                                Analyze
+                            </Button>
+                            <Button
+                                variant="success"
+                                size="sm"
+                                icon={FaPlay}
+                                onClick={runCode}
+                                disabled={isRunning || isSubmitting}
+                                loading={isRunning}
+                            >
+                                Run
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                icon={FaPaperPlane}
+                                onClick={submitCode}
+                                disabled={isRunning || isSubmitting}
+                                loading={isSubmitting}
+                            >
+                                Submit
+                            </Button>
                         </div>
                     </div>
 
-                    {/* Code Editor & Output */}
-                    <div className="lg:col-span-6 flex flex-col gap-8">
-                        {/* Editor Card */}
-                        <div className="bg-gradient-to-br from-slate-700/60 to-slate-900/80 rounded-2xl p-3 md:p-4 shadow-xl border border-slate-700/60 backdrop-blur-xl max-h-[80vh] overflow-y-auto custom-scrollbar">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                <div className="flex gap-2 items-center">
-                                    <label htmlFor="language" className="font-semibold text-purple-300">Language:</label>
-                                    <select
-                                        id="language"
-                                        value={language}
-                                        onChange={handleLanguageChange}
-                                        className="bg-slate-800 border border-purple-600/30 rounded-lg px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    >
-                                        <option value="cpp">C++</option>
-                                        <option value="python">Python</option>
-                                        <option value="java">Java</option>
-                                        <option value="javascript">JavaScript</option>
-                                    </select>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={runCode}
-                                        disabled={isRunning || isSubmitting}
-                                        className="px-5 py-2 mb-2 bg-gradient-to-r from-green-500 to-green-400 text-white rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-green-500 transition-all flex items-center gap-2 disabled:opacity-60"
-                                    >
-                                        {isRunning ? (
-                                            <>
-                                                <div className="animate-spin h-4 w-4 border-2 border-green-300 border-t-transparent rounded-full mr-2"></div>
-                                                Running
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                Run Code
-                                            </>
-                                        )}
-                                    </button>
-                                    <button
-                                        onClick={submitCode}
-                                        disabled={isRunning || isSubmitting}
-                                        className="px-5 py-2 mb-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-blue-600 transition-all flex items-center gap-2 disabled:opacity-60"
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <div className="animate-spin h-4 w-4 border-2 border-purple-300 border-t-transparent rounded-full mr-2"></div>
-                                                Submitting
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                Submit
-                                            </>
-                                        )}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setShowCustomCheck(true);
-                                            setCustomLang(language);
-                                            setCustomCode(code);
-                                            setCustomInput('');
-                                            setCustomOutput('');
-                                        }}
-                                        className="px-5 py-2 mb-2 bg-purple-600 text-white rounded-xl font-bold shadow-lg hover:bg-purple-700 transition-all flex items-center gap-2"
-                                    >
-                                        Custom Check
-                                    </button>
-                                    <button
-                                        onClick={analyzeCode}
-                                        disabled={isAnalyzing || !code.trim()}
-                                        className="px-5 py-2 mb-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all flex items-center gap-2 disabled:opacity-60"
-                                    >
-                                        {isAnalyzing ? (
-                                            <>
-                                                <div className="animate-spin h-4 w-4 border-2 border-blue-300 border-t-transparent rounded-full mr-2"></div>
-                                                Analyzing
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FaRobot className="mr-1" />
-                                                Analyze Code
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="rounded-xl overflow-hidden border border-slate-700">
-                                <Editor
-                                    height="420px"
-                                    theme="vs-dark"
-                                    language={language}
-                                    value={code}
-                                    onChange={handleEditorChange}
-                                    options={{ fontSize: 16, minimap: { enabled: false }, fontFamily: 'Fira Mono, monospace' }}
-                                />
-                            </div>
-                        </div>
+                    {/* Code Editor */}
+                    <div className="flex-1 min-h-0">
+                        <Editor
+                            height="100%"
+                            theme="vs-dark"
+                            language={language === 'cpp' ? 'cpp' : language}
+                            value={code}
+                            onChange={handleEditorChange}
+                            options={{
+                                fontSize: 14,
+                                fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+                                minimap: { enabled: false },
+                                padding: { top: 16, bottom: 16 },
+                                lineNumbers: 'on',
+                                renderLineHighlight: 'line',
+                                scrollBeyondLastLine: false,
+                                automaticLayout: true,
+                                tabSize: 4,
+                                wordWrap: 'off',
+                                cursorBlinking: 'smooth',
+                                smoothScrolling: true,
+                            }}
+                        />
+                    </div>
 
-                        {/* Output Card */}
-                        <div className={`relative bg-gradient-to-br from-green-700/30 to-slate-800/40 rounded-2xl p-3 md:p-4 shadow-xl border border-green-700/20 backdrop-blur-xl ${verdict === 'Accepted' || status === 'solved' ? 'ring-4 ring-green-400/30 animate-pulse' : verdict === 'Wrong Answer' || verdict === 'Compilation Error' ? 'ring-4 ring-red-400/30 animate-shake' : ''}`}> 
-                            {/* Confetti for Accepted */}
-                            {(verdict === 'Accepted' || status === 'solved') && (
-                                <Confetti numberOfPieces={150} recycle={false} className="pointer-events-none fixed top-0 left-0 w-full h-full z-50" />
+                    {/* Output Panel */}
+                    <div className={`border-t ${verdictStyle.border} ${verdictStyle.bg} transition-colors duration-300`}>
+                        {/* Output Header with Tabs */}
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/50">
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setActiveTab('output')}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                        activeTab === 'output' 
+                                            ? 'bg-slate-700/80 text-white' 
+                                            : 'text-slate-400 hover:text-slate-300'
+                                    }`}
+                                >
+                                    Output
+                                </button>
+                            </div>
+                            
+                            {/* Verdict Badge */}
+                            {verdict && (
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold ${verdictStyle.bg} ${verdictStyle.text} border ${verdictStyle.border}`}>
+                                    <verdictStyle.icon className="text-xs" />
+                                    {verdict}
+                                </div>
                             )}
-                            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                                <FaCheckCircle className={`text-2xl ${verdict === 'Accepted' || status === 'solved' ? 'text-green-400' : verdict === 'Wrong Answer' ? 'text-red-400' : verdict === 'Compilation Error' ? 'text-yellow-300' : 'text-slate-400'}`} />
-                                Output
-                            </h3>
-                            <div className="flex gap-2 mb-3 items-center">
-                                {verdict && (
-                                    <div className={`text-sm font-bold px-3 py-1 rounded-full border flex items-center gap-2 ${
-                                        verdict === 'Accepted' || status === 'solved'
-                                            ? 'bg-green-500/20 text-green-300 border-green-400/30'
-                                            : verdict === 'Wrong Answer'
-                                            ? 'bg-red-500/20 text-red-300 border-red-400/30 animate-shake'
-                                            : verdict === 'Compilation Error'
-                                            ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/30 animate-shake'
-                                            : 'bg-slate-600/20 text-slate-200 border-slate-400/30'
-                                    }`}>
-                                        {verdict === 'Accepted' || status === 'solved' ? <FaCheckCircle className="text-green-400 animate-bounce" /> : null}
-                                        {verdict === 'Wrong Answer' || verdict === 'Compilation Error' ? <FaSadTear className="text-red-400 animate-bounce" /> : null}
-                                        {verdict}
+                        </div>
+                        
+                        {/* Output Content */}
+                        <div className="p-4 max-h-48 overflow-y-auto">
+                            {(verdict === 'Accepted' || status === 'solved') ? (
+                                <div className="flex items-center gap-3 text-emerald-400">
+                                    <FaCheckCircle className="text-xl" />
+                                    <span className="font-semibold">All test cases passed!</span>
+                                </div>
+                            ) : (verdict === 'Wrong Answer' || verdict === 'Compilation Error') ? (
+                                <div className="space-y-2">
+                                    <div className={`flex items-center gap-2 ${verdictStyle.text}`}>
+                                        <verdictStyle.icon />
+                                        <span className="font-medium">
+                                            {verdict === 'Wrong Answer' ? 'Some test cases failed' : 'Compilation error occurred'}
+                                        </span>
                                     </div>
-                                )}
-                            </div>
-                            <div className={`bg-black/60 p-4 rounded-lg min-h-[160px] overflow-y-auto font-mono whitespace-pre text-base border ${verdict === 'Accepted' || status === 'solved' ? 'text-green-200 border-green-800/20' : verdict === 'Wrong Answer' || verdict === 'Compilation Error' ? 'text-red-200 border-red-800/20 animate-shake' : 'text-slate-200 border-slate-700/20'}`}>
-                                {verdict === 'Accepted' || status === 'solved' ? (
-                                    <span className="font-extrabold text-green-300 text-xl flex items-center gap-2">
-                                        <FaCheckCircle className="text-green-400 animate-bounce" /> Congratulations! All test cases passed!
-                                    </span>
-                                ) : (verdict === 'Wrong Answer' || verdict === 'Compilation Error') ? (
-                                    <span className="font-extrabold text-red-300 text-xl flex items-center gap-2">
-                                        <FaSadTear className="text-red-400 animate-bounce" /> Oops! Some test cases failed.
-                                    </span>
-                                ) : null}
-                                <div>{output || <span className="text-slate-400">Run your code to see output here</span>}</div>
-                            </div>
+                                    {output && (
+                                        <pre className="text-slate-300 text-sm font-mono whitespace-pre-wrap mt-2">
+                                            {output}
+                                        </pre>
+                                    )}
+                                </div>
+                            ) : output ? (
+                                <pre className="text-slate-300 text-sm font-mono whitespace-pre-wrap">
+                                    {output}
+                                </pre>
+                            ) : (
+                                <p className="text-slate-500 text-sm">
+                                    Run your code to see output here
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
-                
-                {showCustomCheck && (
-                    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg w-full max-w-2xl relative">
-                            <button onClick={() => setShowCustomCheck(false)} className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl">&times;</button>
-                            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white">Custom Code Check</h2>
-                            <div className="flex gap-4 mb-4">
-                                <label className="font-semibold text-slate-700 dark:text-slate-200">Language:</label>
-                                <select value={customLang} onChange={e => setCustomLang(e.target.value)} className="rounded-lg px-3 py-1 border dark:bg-slate-800">
+            </div>
+
+            {/* Custom Check Modal */}
+            {showCustomCheck && (
+                <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 w-full max-w-2xl max-h-[90vh] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50">
+                            <h2 className="text-lg font-semibold text-white">Custom Input</h2>
+                            <button 
+                                onClick={() => setShowCustomCheck(false)} 
+                                className="text-slate-400 hover:text-white transition-colors p-1"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+                        
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-4 max-h-[calc(90vh-140px)] overflow-y-auto">
+                            {/* Language Selector */}
+                            <div className="flex items-center gap-3">
+                                <label className="text-sm font-medium text-slate-400">Language:</label>
+                                <select 
+                                    value={customLang} 
+                                    onChange={e => setCustomLang(e.target.value)} 
+                                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
+                                >
                                     <option value="cpp">C++</option>
                                     <option value="python">Python</option>
                                     <option value="java">Java</option>
                                 </select>
                             </div>
-                            <div className="mb-4">
+                            
+                            {/* Code Editor */}
+                            <div className="rounded-xl overflow-hidden border border-slate-700/50">
                                 <Editor
-                                    height="250px"
+                                    height="200px"
                                     theme="vs-dark"
                                     language={customLang === 'cpp' ? 'cpp' : customLang}
                                     value={customCode}
                                     onChange={val => setCustomCode(val)}
-                                    options={{ fontSize: 15, minimap: { enabled: false } }}
+                                    options={{ 
+                                        fontSize: 14, 
+                                        minimap: { enabled: false },
+                                        padding: { top: 12, bottom: 12 }
+                                    }}
                                 />
                             </div>
-                            <div className="mb-4">
-                                <label className="font-semibold text-slate-700 dark:text-slate-200">Custom Input:</label>
+                            
+                            {/* Custom Input */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-2">Input:</label>
                                 <textarea
-                                    className="w-full rounded-lg px-3 py-2 border dark:bg-slate-800 mt-2"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                                     rows={3}
                                     value={customInput}
                                     onChange={e => setCustomInput(e.target.value)}
-                                    placeholder="Enter input for your code here..."
+                                    placeholder="Enter your test input..."
                                 />
                             </div>
-                            <button
-                                onClick={handleCustomCheck}
-                                className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-semibold"
-                                disabled={isCustomRunning}
-                            >
-                                {isCustomRunning ? 'Running...' : 'Run Custom Code'}
-                            </button>
-                            <div className="mt-4">
-                                <label className="font-semibold text-slate-700 dark:text-slate-200">Output:</label>
-                                <pre className="bg-slate-900 text-white rounded-lg p-3 mt-2 max-h-40 overflow-auto whitespace-pre-wrap">{customOutput}</pre>
+                            
+                            {/* Output */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-2">Output:</label>
+                                <pre className="bg-slate-900 rounded-lg p-4 min-h-[80px] max-h-40 overflow-auto text-sm font-mono text-slate-300 border border-slate-700/50">
+                                    {customOutput || <span className="text-slate-500">Output will appear here...</span>}
+                                </pre>
                             </div>
                         </div>
+                        
+                        {/* Modal Footer */}
+                        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-700/50 bg-slate-800/50">
+                            <Button variant="ghost" onClick={() => setShowCustomCheck(false)}>
+                                Cancel
+                            </Button>
+                            <Button 
+                                variant="primary" 
+                                icon={FaPlay}
+                                onClick={handleCustomCheck}
+                                loading={isCustomRunning}
+                                disabled={isCustomRunning}
+                            >
+                                Run Code
+                            </Button>
+                        </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* AI Code Analysis Modal */}
-                {showAnalysis && codeAnalysis && (
-                    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 overflow-y-auto backdrop-blur-sm">
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl shadow-2xl border border-blue-500/30 p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-fadeIn">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent flex items-center">
-                                    <FaRobot className="text-blue-400 mr-2" /> AI Code Analysis
-                                </h2>
-                                <button 
-                                    onClick={() => setShowAnalysis(false)} 
-                                    className="text-slate-400 hover:text-white transition-colors duration-200"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+            {/* AI Code Analysis Modal */}
+            {showAnalysis && codeAnalysis && (
+                <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                                    <FaRobot className="text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">AI Code Analysis</h2>
+                                    <p className="text-xs text-slate-400">Powered by advanced code analysis</p>
+                                </div>
                             </div>
+                            <button 
+                                onClick={() => setShowAnalysis(false)} 
+                                className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        {/* Modal Body */}
+                        <div className="p-6 max-h-[calc(90vh-80px)] overflow-y-auto space-y-6">
+                            
+                            {/* Metrics Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* Code Quality Score */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col justify-between hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <FaChartBar className="text-blue-400" />
-                                        <h3 className="font-semibold text-blue-300">Code Quality</h3>
+                                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <FaChartBar className="text-blue-400 text-sm" />
+                                        <h3 className="text-sm font-semibold text-slate-300">Quality Score</h3>
                                     </div>
-                                    <div className="flex justify-center items-center flex-1">
+                                    <div className="mb-3">
                                         {codeAnalysis.codeQualityAssessment && renderQualityScore(parseInt(codeAnalysis.codeQualityAssessment.score || 0))}
                                     </div>
-                                    <p className="text-sm text-slate-300 mt-2">{codeAnalysis.codeQualityAssessment?.justification || "Assessment not available"}</p>
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        {codeAnalysis.codeQualityAssessment?.justification || "Assessment not available"}
+                                    </p>
                                 </div>
 
                                 {/* Time Complexity */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-green-500/40 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <h3 className="font-semibold text-green-300">Time Complexity</h3>
+                                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <FaClock className="text-emerald-400 text-sm" />
+                                        <h3 className="text-sm font-semibold text-slate-300">Time Complexity</h3>
                                     </div>
-                                    <div className="mt-2 font-mono bg-black/30 p-2 rounded text-green-200">
-                                        {codeAnalysis.complexity?.timeComplexity || "Not determined"}
+                                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2 mb-3">
+                                        <code className="text-emerald-400 font-mono text-lg">
+                                            {codeAnalysis.complexity?.timeComplexity || "O(?)"}
+                                        </code>
                                     </div>
-                                    <p className="text-sm text-slate-300 mt-2">{codeAnalysis.complexity?.timeComplexity?.explanation || ""}</p>
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        {codeAnalysis.complexity?.timeComplexity?.explanation || ""}
+                                    </p>
                                 </div>
 
                                 {/* Space Complexity */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-purple-500/40 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                        <h3 className="font-semibold text-purple-300">Space Complexity</h3>
+                                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <FaMemory className="text-purple-400 text-sm" />
+                                        <h3 className="text-sm font-semibold text-slate-300">Space Complexity</h3>
                                     </div>
-                                    <div className="mt-2 font-mono bg-black/30 p-2 rounded text-purple-200">
-                                        {codeAnalysis.complexity?.spaceComplexity || "Not determined"}
+                                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-3 py-2 mb-3">
+                                        <code className="text-purple-400 font-mono text-lg">
+                                            {codeAnalysis.complexity?.spaceComplexity || "O(?)"}
+                                        </code>
                                     </div>
-                                    <p className="text-sm text-slate-300 mt-2">{codeAnalysis.complexity?.spaceExplanation || ""}</p>
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        {codeAnalysis.complexity?.spaceExplanation || ""}
+                                    </p>
                                 </div>
                             </div>
 
-                            {/* Coding Style Feedback */}
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FaFileAlt className="text-blue-400" />
-                                    <h3 className="font-semibold text-blue-300">Analysis</h3>
+                            {/* Analysis */}
+                            <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-5">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <FaFileAlt className="text-blue-400 text-sm" />
+                                    <h3 className="text-sm font-semibold text-slate-300">Analysis</h3>
                                 </div>
-                                <p className="text-slate-300 text-left">{codeAnalysis.suggestions?.analysis || "Analysis not available"}</p>
-                            </div>  
+                                <p className="text-slate-400 text-sm leading-relaxed">
+                                    {codeAnalysis.suggestions?.analysis || "Analysis not available"}
+                                </p>
+                            </div>
 
-                            {/* Logic Optimization */}
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300">
+                            {/* Optimization Suggestions */}
+                            <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-5">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <FaLightbulb className="text-amber-400" />
-                                    <h3 className="font-semibold text-amber-300">Optimization Suggestions</h3>
+                                    <FaLightbulb className="text-amber-400 text-sm" />
+                                    <h3 className="text-sm font-semibold text-slate-300">Optimization Suggestions</h3>
                                 </div>
-                                <ul className="list-disc pl-5 space-y-2 text-left">
+                                <ul className="space-y-2">
                                     {codeAnalysis.suggestions?.suggestions && 
                                     Array.isArray(codeAnalysis.suggestions.suggestions) ? (
-                                    codeAnalysis.suggestions.suggestions.map((suggestion, idx) => (
-                                        <li key={idx} className="text-slate-300">{suggestion}</li>
-                                    ))
+                                        codeAnalysis.suggestions.suggestions.map((suggestion, idx) => (
+                                            <li key={idx} className="flex items-start gap-3 text-sm text-slate-400">
+                                                <span className="w-5 h-5 rounded-full bg-amber-500/20 flex-shrink-0 flex items-center justify-center text-xs text-amber-400 mt-0.5">
+                                                    {idx + 1}
+                                                </span>
+                                                {suggestion}
+                                            </li>
+                                        ))
                                     ) : (
-                                    <li className="text-slate-400">No optimization suggestions available</li>
+                                        <li className="text-slate-500 text-sm">No optimization suggestions available</li>
                                     )}
                                 </ul>
                             </div>
 
-                            {/* Optimized Code with Editor */}
-                            <div className="bg-gradient-to-r from-slate-800/70 to-slate-900/70 border border-teal-700/30 rounded-xl p-5 mb-6 hover:border-teal-500/40 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <FaCode className="text-teal-400" />
-                                        <h3 className="font-semibold text-teal-300">Optimized Code</h3>
+                            {/* Optimized Code */}
+                            {codeAnalysis.suggestions?.optimizedCode && (
+                                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl overflow-hidden">
+                                    <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700/50">
+                                        <div className="flex items-center gap-2">
+                                            <FaCode className="text-teal-400 text-sm" />
+                                            <h3 className="text-sm font-semibold text-slate-300">Optimized Code</h3>
+                                        </div>
+                                        <span className="px-2 py-1 text-xs bg-teal-500/20 text-teal-400 rounded-md">
+                                            Recommended
+                                        </span>
                                     </div>
-                                    <div className="px-3 py-1 text-xs bg-teal-900/50 text-teal-300 rounded-full border border-teal-700/50">
-                                        Recommended Implementation
-                                    </div>
+                                    <Editor
+                                        height="250px"
+                                        theme="vs-dark"
+                                        language={language}
+                                        value={
+                                            Array.isArray(codeAnalysis.suggestions.optimizedCode) 
+                                                ? codeAnalysis.suggestions.optimizedCode.join('\n')
+                                                : codeAnalysis.suggestions.optimizedCode
+                                        }
+                                        options={{ 
+                                            fontSize: 13, 
+                                            readOnly: true, 
+                                            minimap: { enabled: false },
+                                            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                                            scrollBeyondLastLine: false,
+                                            padding: { top: 12, bottom: 12 }
+                                        }}
+                                    />
                                 </div>
-                                
-                                {codeAnalysis.suggestions?.optimizedCode ? (
-                                    Array.isArray(codeAnalysis.suggestions.optimizedCode) ? (
-                                        <div className="bg-gray-900/70 rounded-lg border border-slate-700 overflow-hidden">
-                                            <Editor
-                                                height="250px"
-                                                theme="vs-dark"
-                                                language={language}
-                                                value={codeAnalysis.suggestions.optimizedCode.join('\n')}
-                                                options={{ 
-                                                    fontSize: 14, 
-                                                    readOnly: true, 
-                                                    minimap: { enabled: false },
-                                                    fontFamily: 'Fira Mono, monospace',
-                                                    scrollBeyondLastLine: false
-                                                }}
-                                            />
-                                        </div>
-                                    ) : typeof codeAnalysis.suggestions.optimizedCode === 'string' ? (
-                                        <div className="bg-gray-900/70 rounded-lg border border-slate-700 overflow-hidden">
-                                            <Editor
-                                                height="250px"
-                                                theme="vs-dark"
-                                                language={language}
-                                                value={codeAnalysis.suggestions.optimizedCode}
-                                                options={{ 
-                                                    fontSize: 14, 
-                                                    readOnly: true, 
-                                                    minimap: { enabled: false },
-                                                    fontFamily: 'Fira Mono, monospace',
-                                                    scrollBeyondLastLine: false
-                                                }}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <p className="text-slate-400 text-center p-4 bg-black/20 rounded-lg">Optimized code format not recognized</p>
-                                    )
-                                ) : (
-                                    <p className="text-slate-400 text-center p-4 bg-black/20 rounded-lg">No optimized code available</p>
-                                )}
-                            </div>
+                            )}
 
-                            {/* Overall Assessment */}
-                            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/30 rounded-xl p-5 hover:border-blue-600/40 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <h3 className="font-semibold text-blue-300">Overall Assessment</h3>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <h4 className="font-medium text-amber-300 mb-2">Areas for Improvement:</h4>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            {codeAnalysis.suggestions?.improvements ? (
-                                                Array.isArray(codeAnalysis.suggestions.improvements) ? 
-                                                    codeAnalysis.suggestions.improvements.map((area, idx) => (
-                                                        <li key={idx} className="text-slate-300">{area}</li>
-                                                    ))
-                                                : <li className="text-slate-300">{codeAnalysis.suggestions.improvements}</li>
-                                            ) : (
-                                                <li className="text-slate-400">No improvement areas highlighted</li>
-                                            )}
-                                        </ul>
+                            {/* Areas for Improvement */}
+                            {codeAnalysis.suggestions?.improvements && (
+                                <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-5">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <FaChartBar className="text-blue-400 text-sm" />
+                                        <h3 className="text-sm font-semibold text-slate-300">Areas for Improvement</h3>
                                     </div>
+                                    <ul className="space-y-2">
+                                        {Array.isArray(codeAnalysis.suggestions.improvements) ? 
+                                            codeAnalysis.suggestions.improvements.map((area, idx) => (
+                                                <li key={idx} className="flex items-start gap-3 text-sm text-slate-400">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                                                    {area}
+                                                </li>
+                                            ))
+                                        : <li className="text-slate-400">{codeAnalysis.suggestions.improvements}</li>
+                                        }
+                                    </ul>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                <ToastContainer theme="dark" />
-            </div>
+            <ToastContainer 
+                theme="dark" 
+                toastClassName="!bg-slate-800 !text-white !border !border-slate-700/50"
+            />
         </div>
     );
-};
-
-const getDifficultyColor = (difficulty) => {
-    switch (difficulty?.toLowerCase()) {
-        case 'easy':
-            return 'px-4 py-1.5 text-sm bg-[#32CD32] bg-opacity-20 text-[#32CD32] rounded-full font-medium border border-[#32CD32] border-opacity-30';
-        case 'medium':
-            return 'px-4 py-1.5 text-sm bg-[#FFD93D] bg-opacity-20 text-[#FFD93D] rounded-full font-medium border border-[#FFD93D] border-opacity-30';
-        case 'hard':
-            return 'px-4 py-1.5 text-sm bg-[#FF6B6B] bg-opacity-20 text-[#FF6B6B] rounded-full font-medium border border-[#FF6B6B] border-opacity-30';
-        default:
-            return 'px-4 py-1.5 text-sm bg-gray-100 bg-opacity-20 text-gray-800 rounded-full font-medium border border-gray-300';
-    }
 };
 
 export default ProblemPage;

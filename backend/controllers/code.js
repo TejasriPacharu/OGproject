@@ -1,327 +1,252 @@
-const { cppExecution, cppTestCases } = require("../services/cpp.js");
+const { createJobDir } = require("../services/createJobDir");
+const { runDocker } = require("../services/dockerExecutor");
+
 const { generateFile} = require("../services/generateFile");
-const { generateInputFile } = require("../services/generateInputFile");
+
 const { analyzeCode } = require("../services/ai");
-const { cleanupJobFiles } = require("../services/fileCleanup");
+const { cleanupJobDirectory } = require("../services/fileCleanup");
 const Problem = require("../models/Problem");
 const Submission = require("../models/Submission");
 const path = require("path");
 const fs = require("fs");
 
-const runCode = async (req, res) => {
-    let { language, code, problemId} = req.body;
-    console.log("runCode called with language:", language);
-    console.log("runCode called with code:", code);
-    console.log("runCode called with problemId:", problemId);
-    
-    let filePath, inputPath;
-
-    if (code === "") {
-        return res.status(400).json({ message: "Code body cannot be empty!" });
-    }
-
-    try {
-        const problemData = await Problem.findById(problemId);
-        const timelimit = problemData.timelimit;
-        const input = problemData.testCases[0].input;
-        const codeStubs = problemData.codeStubs;
-        filePath = await generateFile(language, code, codeStubs);
-        inputPath = await generateInputFile(input);
-        
-        // Extract jobIds from file paths for cleanup
-        const codeJobId = path.basename(filePath).split(".")[0];
-        const inputJobId = path.basename(inputPath).split(".")[0];
-        
-        let output;
-
-        if (language === "cpp") {
-            output = await cppExecution(filePath, inputPath, timelimit);
-            output = output.replace(/\r?\n|\r/g, '');
-            output.trim();
-        }
-
-        // Send response to client
-        res.json({ filePath, inputPath, output });
-        
-        // Clean up files after sending response
-        setTimeout(() => {
-            // Clean up both code and input files
-            cleanupJobFiles(codeJobId)
-                .catch(err => console.error(`Error cleaning up code file ${codeJobId}:`, err));
-                
-            if (codeJobId !== inputJobId) {
-                cleanupJobFiles(inputJobId)
-                    .catch(err => console.error(`Error cleaning up input file ${inputJobId}:`, err));
-            }
-        }, 1000);
-        
-        return;
-    } catch (error) {
-        // If files were created but execution failed, still try to clean up
-        if (filePath || inputPath) {
-            setTimeout(() => {
-                if (filePath) {
-                    const codeJobId = path.basename(filePath).split(".")[0];
-                    cleanupJobFiles(codeJobId)
-                        .catch(err => console.error(`Error cleaning up code file ${codeJobId}:`, err));
-                }
-                
-                if (inputPath) {
-                    const inputJobId = path.basename(inputPath).split(".")[0];
-                    cleanupJobFiles(inputJobId)
-                        .catch(err => console.error(`Error cleaning up input file ${inputJobId}:`, err));
-                }
-            }, 1000);
-        }
-        
-        return res.status(500).json(error);
-    }
+const normalize = (str = "") => {
+  return String(str)
+    .replace(/\r?\n/g, "")
+    .replace(/\s+/g, "")
+    .replace(/[\[\]\(\)]/g, "")
+    .replace(/,/g, "")
+    .trim();
 };
 
+
+
+const runCode = async (req, res) => {
+  const { language, code, problemId } = req.body;
+  let jobDir;
+
+  if (!code) {
+    return res.status(400).json({ message: "Code empty" });
+  }
+
+  try {
+    const problem = await Problem.findById(problemId);
+    const job = createJobDir();
+    jobDir = job.jobDir;
+
+    const codeFile = language === "cpp" ? "solution.cpp" : "solution.py";
+    fs.writeFileSync(path.join(jobDir, codeFile), code);
+
+    fs.writeFileSync(
+      path.join(jobDir, "input.txt"),
+      problem.testCases[0].input
+    );
+
+    console.log("Job directory Created:", jobDir);
+
+    const result = await runDocker({
+      language,
+      jobDir,
+      timeLimit: problem.timelimit,
+    });
+
+    console.log("Docker execution result:", result);
+
+    const outputPath = path.join(jobDir, "output.txt");
+    const output = fs.existsSync(outputPath)
+      ? fs.readFileSync(outputPath, "utf8")
+      : "";
+
+    return res.json({ output, verdict: result.verdict });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Execution failed" });
+  } finally {
+    if (jobDir) cleanupJobDirectory(jobDir);
+  }
+};
+
+
 const submitCode = async (req, res) => {
-    let { language, code, problemId, userId } = req.body;
-    let filePath;
-    let inputJobIds = [];
+  const { language, code, problemId, userId } = req.body;
 
-    if (code === "") {
-        return res.status(400).json({ message: "Code body cannot be empty!" });
+  if (!code) {
+    return res.status(400).json({ message: "Code body cannot be empty!" });
+  }
+
+  let jobDir;
+  let verdict = "Accepted";
+  let status = "attempted";
+  let lastOutput = "";
+
+  try {
+    const problem = await Problem.findById(problemId);
+    const testcases = problem.testCases;
+
+    const job = createJobDir();
+    jobDir = job.jobDir;
+
+    const codeFile =
+      language === "cpp" ? "solution.cpp" : "solution.py";
+    fs.writeFileSync(path.join(jobDir, codeFile), code);
+
+    for (let i = 0; i < testcases.length; i++) {
+      fs.writeFileSync(
+        path.join(jobDir, "input.txt"),
+        testcases[i].input
+      );
+
+      const result = await runDocker({
+        language,
+        jobDir,
+        timeLimit: problem.timelimit,
+      });
+
+      const outputPath = path.join(jobDir, "output.txt");
+      lastOutput = fs.existsSync(outputPath)
+        ? fs.readFileSync(outputPath, "utf8")
+        : "";
+
+      if (result.verdict === "TLE") {
+        verdict = "Time Limit Exceeded";
+        break;
+      }
+
+      if (
+        normalize(lastOutput) !==
+        normalize(testcases[i].output)
+      ) {
+        verdict = "Wrong Answer";
+        break;
+      }
+
+      if (i === testcases.length - 1) {
+        status = "solved";
+      }
     }
 
-    try {
-        const problemData = await Problem.findById(problemId);
-        const codeStubs = problemData.codeStubs;
-        filePath = await generateFile(language, code, codeStubs);
-        const codeJobId = path.basename(filePath).split(".")[0];
-        
-        let output;
-        const testcases = problemData.testCases;
-        let verdict;
-        let status;
+    const submission = await Submission.create({
+      userId,
+      problemId,
+      language,
+      code,
+      output: lastOutput,
+      verdict,
+      status,
+    });
 
-        for (let i = 0; i < testcases.length; i++) {
-            const inputPath = await generateInputFile(testcases[i].input);
-            // Extract and save each input job ID for cleanup
-            const inputJobId = path.basename(inputPath).split(".")[0];
-            inputJobIds.push(inputJobId);
-            
-            const outputPath = testcases[i].output;
-
-            if (language === "cpp") {
-                const timeLimit = problemData.timelimit || 5; 
-                const TL = timeLimit + timeLimit;
-                output = await cppTestCases(filePath, inputPath, outputPath, TL);
-                status = "attempted";
-            }
-            console.log("==================================");
-            console.log("OUTPUT: ",output);
-            console.log("==================================");
-
-            if(output === "accepted") {
-                verdict = "Accepted";
-            }
-            if (output.stderr) {
-                verdict = "Compilation Error";
-                break;
-            }
-
-            if (output === "failed") {
-                verdict = "Wrong Answer";
-                break;
-            }
-
-            if(i === testcases.length - 1){
-                status = "solved";
-            }
-        }
-
-        const submission = await Submission.create({
-            userId,
-            problemId,
-            language,
-            code,
-            output,
-            verdict,
-            status,
-        });
-
-        if (status === "solved") {
-            const problemData = await Problem.findById(problemId);
-            const solvedBy = problemData.solvedBy || [];
-        
-            if (!solvedBy.includes(userId)) {
-                solvedBy.push(userId);
-                await Problem.updateOne({ _id: problemId }, { solvedBy });
-            }
-        }
-                
-        // Send response to the client first
-        res.status(201).json({ message: "Submission successful!", submission });
-        
-        // Then clean up the files
-        setTimeout(() => {
-            // Clean up code file
-            if (filePath) {
-                const codeJobId = path.basename(filePath).split(".")[0];
-                cleanupJobFiles(codeJobId)
-                    .catch(err => console.error(`Error cleaning up code file ${codeJobId}:`, err));
-            }
-            
-            // Clean up each input file
-            inputJobIds.forEach(id => {
-                cleanupJobFiles(id)
-                    .catch(err => console.error(`Error cleaning up input file ${id}:`, err));
-            });
-        }, 1000);
-        
-        return;
-    } catch (error) {
-        const submission = await Submission.create({
-            userId,
-            problemId,
-            language,
-            code,
-            output,
-            verdict,
-            status : "failed",
-        });
-
-        // Clean up any created files even on error
-        setTimeout(() => {
-            if (filePath) {
-                const codeJobId = path.basename(filePath).split(".")[0];
-                cleanupJobFiles(codeJobId)
-                    .catch(err => console.error(`Error cleaning up code file ${codeJobId}:`, err));
-            }
-            
-            // Clean up each input file
-            inputJobIds.forEach(id => {
-                cleanupJobFiles(id)
-                    .catch(err => console.error(`Error cleaning up input file ${id}:`, err));
-            });
-        }, 1000);
-
-        return res.status(500).json({message: "Submission Failed !", submission});
+    if (status === "solved") {
+      await Problem.updateOne(
+        { _id: problemId },
+        { $addToSet: { solvedBy: userId } }
+      );
     }
+
+    return res.status(201).json({
+      message: "Submission successful!",
+      submission,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    const submission = await Submission.create({
+      userId,
+      problemId,
+      language,
+      code,
+      verdict: "Runtime Error",
+      status: "failed",
+    });
+
+    return res.status(500).json({
+      message: "Submission failed",
+      submission,
+    });
+
+  } finally {
+    if (jobDir) cleanupJobDirectory(jobDir);
+  }
 };
 
 const customCheck = async (req, res) => {
-    let {problemId, language, code, input} = req.body;
-    let filePath, inputPath;
-    
-    try {
-        const problemData = await Problem.findById(problemId);
-        const codeStubs = problemData.codeStubs;
-        filePath = await generateFile(language, code, codeStubs);
-        inputPath = await generateInputFile(input);
-        
-        // Extract job IDs for cleanup
-        const codeJobId = path.basename(filePath).split(".")[0];
-        const inputJobId = path.basename(inputPath).split(".")[0];
-        
-        const output = await cppExecution(filePath, inputPath, timelimit = 5);
-        
-        // Send response to client
-        res.json({ output });
-        
-        // Clean up files after sending response
-        setTimeout(() => {
-            cleanupJobFiles(codeJobId)
-                .catch(err => console.error(`Error cleaning up code file ${codeJobId}:`, err));
-                
-            // Always clean up input file separately
-            cleanupJobFiles(inputJobId)
-                .catch(err => console.error(`Error cleaning up input file ${inputJobId}:`, err));
-        }, 1000);
-        
-        return;
-    } catch (error) {
-        // Clean up any created files even on error
-        if (filePath || inputPath) {
-            setTimeout(() => {
-                if (filePath) {
-                    const codeJobId = path.basename(filePath).split(".")[0];
-                    cleanupJobFiles(codeJobId)
-                        .catch(err => console.error(`Error cleaning up code file ${codeJobId}:`, err));
-                }
-                
-                if (inputPath) {
-                    const inputJobId = path.basename(inputPath).split(".")[0];
-                    cleanupJobFiles(inputJobId)
-                        .catch(err => console.error(`Error cleaning up input file ${inputJobId}:`, err));
-                }
-            }, 1000);
-        }
-        
-        return res.status(500).json(error);
-    }
+  const { language, code, input } = req.body;
+
+  let jobDir;
+
+  try {
+    const job = createJobDir();
+    jobDir = job.jobDir;
+
+    const codeFile =
+      language === "cpp" ? "solution.cpp" : "solution.py";
+    fs.writeFileSync(path.join(jobDir, codeFile), code);
+    fs.writeFileSync(path.join(jobDir, "input.txt"), input);
+
+    await runDocker({ language, jobDir, timeLimit: 5 });
+
+    const output = fs.readFileSync(
+      path.join(jobDir, "output.txt"),
+      "utf8"
+    );
+
+    return res.json({ output });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Custom check failed" });
+  } finally {
+    if (jobDir) cleanupJobDirectory(jobDir);
+  }
 };
 
 const analyzeCodeWithAI = async (req, res) => {
-    let { language, code, problemId } = req.body;
-    let filePath;
+  const { language, code, problemId } = req.body;
 
-    if (code === "") {
-        return res.status(400).json({ message: "Code body cannot be empty!" });
+  if (!code || code.trim() === "") {
+    return res.status(400).json({
+      message: "Code body cannot be empty!",
+    });
+  }
+
+  try {
+    // Fetch problem for context only (no stubs, no files)
+    const problemData = await Problem.findById(problemId);
+
+    if (!problemData) {
+      return res.status(404).json({
+        message: "Problem not found",
+      });
     }
 
-    try {
-        // Get the problem description to provide context to Gemini
-        const problemData = await Problem.findById(problemId);
-        
-        if (!problemData) {
-            return res.status(404).json({ message: "Problem not found" });
-        }
-        
-        // Generate a file for the code to provide context to analysis
-        // This helps AI understand the structure better in some cases
-        if (problemData.codeStubs) {
-            filePath = await generateFile(language, code, problemData.codeStubs);
-        }
+    // Perform AI analysis (NO filesystem, NO docker)
+    const analysis = await analyzeCode(
+      code,
+      language,
+      problemData.description || ""
+    );
 
-        // Use the Gemini API to analyze the code
-        const analysis = await analyzeCode(
-            code, 
-            language, 
-            problemData.description
-        );
-        console.log("=====================================");
-        console.log("ANALYSIS: ",analysis);
-        console.log("=====================================");
+    console.log("=====================================");
+    console.log("AI CODE ANALYSIS RESULT");
+    console.log(analysis);
+    console.log("=====================================");
 
-        // Send response to client
-        res.status(200).json({ 
-            message: "Code analysis completed", 
-            analysis 
-        });
-        
-        // Clean up created file if any
-        if (filePath) {
-            const codeJobId = path.basename(filePath).split(".")[0];
-            setTimeout(() => {
-                cleanupJobFiles(codeJobId)
-                    .catch(err => console.error(`Error cleaning up file ${codeJobId} after analysis:`, err));
-            }, 1000);
-        }
-        
-        return;
-    } catch (error) {
-        console.error("Error during code analysis:", error);
-        
-        // Clean up created file if any even on error
-        if (filePath) {
-            const codeJobId = path.basename(filePath).split(".")[0];
-            setTimeout(() => {
-                cleanupJobFiles(codeJobId)
-                    .catch(err => console.error(`Error cleaning up file ${codeJobId} after analysis error:`, err));
-            }, 1000);
-        }
-        
-        return res.status(500).json({ 
-            message: "Failed to analyze code", 
-            error: error.message 
-        });
-    }
+    return res.status(200).json({
+      message: "Code analysis completed",
+      analysis,
+    });
+
+  } catch (error) {
+    console.error("Error during code analysis:", error);
+
+    return res.status(500).json({
+      message: "Failed to analyze code",
+      error: error.message,
+    });
+  }
 };
+
 
 module.exports = {
     runCode,
