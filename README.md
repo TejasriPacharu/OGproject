@@ -1,7 +1,7 @@
 # OG Code
 
 ## Live Website
-**Visit the platform:** [OG Code Platform](https://ogcode.vercel.app/)
+**Visit the platform:** [OG Code Platform](https://o-gproject.vercel.app/)
 
 ## Project Overview
 OG Code is a comprehensive platform designed for algorithmic problem-solving and competitive programming. The platform allows users to:
@@ -43,7 +43,7 @@ OG Code is a comprehensive platform designed for algorithmic problem-solving and
 ## Deployment Information
 
 ### Frontend Deployment (Vercel)
-- **URL:** [https://ogcode.vercel.app/](https://ogcode.vercel.app/)
+- **URL:** [https://o-gproject.vercel.app/](https://o-gproject.vercel.app/)
 - **Deployment Method:** Vercel CI/CD pipeline
 - **Environment Variables:** 
   - `REACT_APP_BACKEND_URI`: Points to the Coolify backend
