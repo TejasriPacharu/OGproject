@@ -16,6 +16,7 @@ const ProblemsList = () => {
   const [solved, setSolved] = useState([]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchProblems = async () => {
       try {
         const response = await axios.get(`${BACKEND_URI}/api/problems`);
@@ -52,7 +53,7 @@ const ProblemsList = () => {
     };
 
     fetchProblems();
-  }, []);
+  }, [user?.id]);
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {

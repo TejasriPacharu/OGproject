@@ -22,15 +22,7 @@ const Profile = () => {
       hard: '0/0'
     }
   });
-  const [weeklyStats, setWeeklyStats] = useState([
-    { day: 'Sun', count: 0 },
-    { day: 'Mon', count: 0 },
-    { day: 'Tue', count: 0 },
-    { day: 'Wed', count: 0 },
-    { day: 'Thu', count: 0 },
-    { day: 'Fri', count: 0 },
-    { day: 'Sat', count: 0 },
-  ]);
+  
   const navigate = useNavigate();
 
   // Updated skills with more Gen Z relevant tech stack
